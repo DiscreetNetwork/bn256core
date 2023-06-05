@@ -89,6 +89,9 @@ enum { SMALLER = -1, EQUAL = 0, LARGER = 1 };
 /* Initialization functions: */
 void bignum_from_gfp(struct bn* n, const gfp_t a);
 void gfp_from_bignum(gfp_t c, struct bn* n);
+int bignum_wordlen(struct bn* n);
+int bignum_bitlen(struct bn* n);
+int bignum_bit(struct bn* n, int i);
 void bignum_init(struct bn* n);
 void bignum_from_int(struct bn* n, DTYPE_TMP i);
 int  bignum_to_int(struct bn* n);

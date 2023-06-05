@@ -120,6 +120,14 @@ int gfp_sign0(const gfp_t e) {
 	return 1;
 }
 
+int gfp_iszero(const gfp_t f) {
+	return f[0] == 0 && f[1] == 0 && f[2] == 0 && f[3] == 0;
+}
+
+int gfp_isone(const gfp_t f) {
+	return f[0] == 1 && f[1] == 0 && f[2] == 0 && f[3] == 0;
+}
+
 int legendre(const gfp_t e) {
 	gfp_t f;
 	
@@ -127,11 +135,12 @@ int legendre(const gfp_t e) {
 
 	mont_decode(f, f);
 
-	if (!(f[0] == 0 && f[1] == 0 && f[2] == 0 && f[3] == 0)) {
+	if (!gfp_iszero(f)) {
 		return 2 * (int)(f[0] & 1) - 1;
 	}
 
 	return 0;
 }
+
 
 

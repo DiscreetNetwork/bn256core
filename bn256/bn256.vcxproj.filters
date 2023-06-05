@@ -48,6 +48,15 @@
     <ClInclude Include="verify.h">
       <Filter>Source Files\hkdf</Filter>
     </ClInclude>
+    <ClInclude Include="gfp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gfp2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gfp6.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -75,6 +84,15 @@
       <Filter>Source Files\hkdf</Filter>
     </ClCompile>
     <ClCompile Include="verify.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gfp2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gfp6.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gfp12.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

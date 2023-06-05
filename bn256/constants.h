@@ -22,6 +22,8 @@ extern const gfp_t s;
 extern const gfp_t sMinus1Over2;
 extern const gfp_t one;
 
+extern const gfp12_t gfp12gen;
+
 const struct bn u;
 const struct bn p;
 const struct bn order;

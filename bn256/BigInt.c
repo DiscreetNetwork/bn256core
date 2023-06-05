@@ -72,6 +72,50 @@ void gfp_from_bignum(gfp_t c, struct bn* n) {
     c[3] |= ((uint64_t)(n->array[7])) << 32;
 }
 
+int bignum_wordlen(struct bn* n) {
+    int i = BN_ARRAY_SIZE;
+    while (i > 0 && n->array[--i] == 0);
+    return i + 1;
+}
+
+static uint8_t len8tab[256] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 };
+
+inline int bitslen(uint32_t x) {
+    int n = 0;
+    if (x >= (1 << 16)) {
+        x >>= 16;
+        n = 16;
+    }
+    if(x >= (1 << 8)) {
+        x >>= 8;
+        n += 8;
+    }
+    return n + (int)len8tab[x];
+}
+
+int bignum_bitlen(struct bn* n) {
+    int i = BN_ARRAY_SIZE;
+    while (i > 0 && n->array[--i] == 0);
+    if (i <= 0) return 0;
+
+    uint32_t top = n->array[i];
+    top |= top >> 1;
+    top |= top >> 2;
+    top |= top >> 4;
+    top |= top >> 8;
+    top |= top >> 16;
+    top |= (top >> 16) >> 16;
+    return i * WORD_SIZE * 8 + bitslen(top);
+}
+
+int bignum_bit(struct bn* n, int i) {
+    require(i < 0, "negative bit check");
+
+    int j = i / (WORD_SIZE * 8);
+    if (j >= bignum_wordlen(n)) return 0;
+    return (int)(n->array[j] >> ((uint32_t)i % (WORD_SIZE * 8) & 1));
+}
+
 
 void bignum_from_int(struct bn* n, DTYPE_TMP i)
 {
