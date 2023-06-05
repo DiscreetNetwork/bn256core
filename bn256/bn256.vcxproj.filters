@@ -57,12 +57,21 @@
     <ClInclude Include="gfp6.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="gfp12.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="curve.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="twist.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pairing.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gfp_generic.c">
@@ -93,6 +102,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gfp12.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="curve.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hash.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="twist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pairing.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

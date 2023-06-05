@@ -1,4 +1,9 @@
-#pragma once
+#if !defined(GFP2_H)
+#define GFP2_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 #include "types.h"
 
@@ -17,3 +22,10 @@ void gfp2_mulscalar(gfp2_t* c, const gfp2_t* a, const gfp_t b);
 void gfp2_mulxi(gfp2_t* c, const gfp2_t* a);
 void gfp2_square(gfp2_t* c, const gfp2_t* a);
 void gfp2_invert(gfp2_t* c, const gfp2_t* a);
+int gfp2_equal(const gfp2_t* a, const gfp2_t* b);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // GFP2_H

@@ -1,4 +1,9 @@
-#pragma once
+#if !defined(CONSTANTS_H)
+#define CONSTANTS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 #include "types.h"
 #include "BigInt.h"
@@ -23,7 +28,17 @@ extern const gfp_t sMinus1Over2;
 extern const gfp_t one;
 
 extern const gfp12_t gfp12gen;
+extern const curvepoint_t g1gen;
+extern const gfp_t curveg1b;
+extern const twistpoint_t g2gen;
+extern const gfp2_t curveg2b;
 
 const struct bn u;
 const struct bn p;
 const struct bn order;
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // CONSTANTS_H

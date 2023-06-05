@@ -68,6 +68,39 @@ const gfp12_t gfp12gen = {
 	}
 };
 
+const curvepoint_t g1gen = {
+	{1, 0, 0, 0},
+	{0x185cac6c5e089665, 0xee5b88d120b5b59e, 0xaa6fecb86184dc21, 0x8fb501e34aa387f9},
+	{1, 0, 0, 0},
+	{1, 0, 0, 0}
+};
+
+const gfp_t curveg1b = { 3, 0, 0, 0 };
+
+const twistpoint_t g2gen = {
+	{
+		{0x402c4ab7139e1404, 0xce1c368a183d85a4, 0xd67cf9a6cb8d3983, 0x3cf246bbc2a9fbe8},
+		{0x88f9f11da7cdc184, 0x18293f95d69509d3, 0xb5ce0c55a735d5a1, 0x15134189bfd45a0}
+	},
+	{
+		{0xbfac7d731e9e87a2, 0xa50bb8007962e441, 0xafe910a4e8270556, 0x5075c5429d69159a},
+		{0xc2e07c1463ea9e56, 0xee4442052072ebd2, 0x561a519486036937, 0x5bd9394cc0d2cce}
+	},
+	{
+		{0, 0, 0, 0},
+		{1, 0, 0, 0}
+	},
+	{
+		{0, 0, 0, 0},
+		{1, 0, 0, 0}
+	}
+};
+
+const gfp2_t curveg2b = {
+	{0x75046774386b8d71, 0x5bd0854a46d36cf8, 0x664327a1d41c8414, 0x96c9abb932eeb2f},
+	{0xb94f760fb4c5ee14, 0xdae9f8f24c3b6eb4, 0x77a675d2e52f4fe4, 0x736f31b09116c66b}
+};
+
 const struct bn u = { {0xEC588301, 0x5A76AE9A, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} };
 const struct bn p = { {0x5E089667, 0x185CAC6C, 0x20B5B59E, 0xEE5B88D1, 0x6184DC21, 0xAA6FECB8, 0x4AA387F9, 0x8FB501E3, 0, 0, 0, 0, 0, 0, 0, 0} };
 const struct bn order = { {0x57AC7261, 0x1A2EF45B, 0xF82B3924, 0x2E8D8E12, 0x6184DC21, 0xAA6FECB8, 0x4AA387F9, 0x8FB501E3, 0, 0, 0, 0, 0, 0, 0, 0} };

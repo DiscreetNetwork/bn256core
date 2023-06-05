@@ -28,7 +28,7 @@ void new_gfp(gfp_t res, const int64_t x) {
 	mont_encode(res, res);
 }
 
-void hash_to_base(gfp_t res, const unsigned char* msg, const unsigned long long msg_len, const unsigned char * dst, const unsigned long long dst_len) {
+void hash_to_base(gfp_t res, const unsigned char* msg, unsigned long long msg_len, const unsigned char * dst, unsigned long long dst_len) {
 	hmacsha256_ctx state;
 	unsigned char t[64];
 	uint32_t* t_p = (uint32_t*)t;
@@ -126,6 +126,10 @@ int gfp_iszero(const gfp_t f) {
 
 int gfp_isone(const gfp_t f) {
 	return f[0] == 1 && f[1] == 0 && f[2] == 0 && f[3] == 0;
+}
+
+int gfp_equal(const gfp_t a, const gfp_t b) {
+	return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];
 }
 
 int legendre(const gfp_t e) {

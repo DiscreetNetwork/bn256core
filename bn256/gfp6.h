@@ -1,4 +1,9 @@
-#pragma once
+#if !defined(GFP6_H)
+#define GFP6_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 #include "types.h"
 
@@ -19,3 +24,9 @@ void gfp6_mulgfp(gfp6_t* c, const gfp6_t* a, gfp_t b);
 void gfp6_multau(gfp6_t* c, const gfp6_t* a);
 void gfp6_square(gfp6_t* c, const gfp6_t* a);
 void gfp6_invert(gfp6_t* c, const gfp6_t* a);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // GFP6_H
