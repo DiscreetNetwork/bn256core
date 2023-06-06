@@ -272,3 +272,4 @@ sha256(unsigned char* out, const unsigned char* in,
     sha256_final(&state, out);
 
     return 0;
+}

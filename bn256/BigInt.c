@@ -134,10 +134,10 @@ void bignum_from_int(struct bn* n, DTYPE_TMP i)
     n->array[0] = (i & 0x0000ffff);
     n->array[1] = (i & 0xffff0000) >> 16;
 #elif (WORD_SIZE == 4)
-    n->array[0] = i;
+    n->array[0] = (uint32_t)i;
     DTYPE_TMP num_32 = 32;
     DTYPE_TMP tmp = i >> num_32; /* bit-shift with U64 operands to force 64-bit results */
-    n->array[1] = tmp;
+    n->array[1] = (uint32_t)tmp;
 #endif
 #endif
 }
@@ -185,7 +185,7 @@ void bignum_from_string(struct bn* n, char* str, int nbytes)
     while (i >= 0)
     {
         tmp = 0;
-        sscanf(&str[i], SSCANF_FORMAT_STR, &tmp);
+        sscanf_s(&str[i], SSCANF_FORMAT_STR, &tmp);
         n->array[j] = tmp;
         i -= (2 * WORD_SIZE); /* step WORD_SIZE hex-byte(s) back in the string. */
         j += 1;               /* step one element forward in the array. */
@@ -206,7 +206,7 @@ void bignum_to_string(struct bn* n, char* str, int nbytes)
     /* reading last array-element "MSB" first -> big endian */
     while ((j >= 0) && (nbytes > (i + 1)))
     {
-        sprintf(&str[i], SPRINTF_FORMAT_STR, n->array[j]);
+        sprintf_s(&str[i], SPRINTF_FORMAT_STR, n->array[j]);
         i += (2 * WORD_SIZE); /* step WORD_SIZE hex-byte(s) forward in the string. */
         j -= 1;               /* step one element back in the array. */
     }
@@ -262,7 +262,7 @@ void bignum_inc(struct bn* n)
     for (i = 0; i < BN_ARRAY_SIZE; ++i)
     {
         tmp = n->array[i];
-        res = tmp + 1;
+        res = (uint32_t)tmp + 1;
         n->array[i] = res;
 
         if (res > tmp)

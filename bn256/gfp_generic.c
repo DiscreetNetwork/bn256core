@@ -36,7 +36,7 @@ void gfp_carry(gfp_t a, const uint64_t head) {
 	carry = (p2[3] & (~ai) | (p2[3] | (~ai)) & bi) >> 63;
 
 	carry = carry & (~head);
-	carry = -carry;
+	carry = (~carry) + 1;
 	ncarry = ~ carry;
 
 	a[0] = (a[0] & carry) | (b[0] & ncarry);

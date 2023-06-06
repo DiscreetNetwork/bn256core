@@ -27,6 +27,7 @@ extern "C" {
 #include <stdint.h>
 #include <assert.h>
 
+#include "types.h"
 
 /* This macro defines the word size in bytes of the array that constitues the big-number data structure. */
 #ifndef WORD_SIZE
