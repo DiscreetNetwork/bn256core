@@ -106,4 +106,6 @@ EXPORT void Miller(bn256::GT& gt, bn256::G1& p, bn256::G2& q);
 EXPORT bn256::GT Miller_1(bn256::G1& p, bn256::G2& q);
 EXPORT void Finalize(bn256::GT& gt);
 
+EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len);
+
 #endif // BN256_H

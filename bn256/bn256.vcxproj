@@ -151,6 +151,7 @@
     <ClInclude Include="gfp2.h" />
     <ClInclude Include="gfp6.h" />
     <ClInclude Include="gfp_generic.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="hmacsha256.h" />
     <ClInclude Include="pairing.h" />
     <ClInclude Include="pch.h" />

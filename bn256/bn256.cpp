@@ -9,6 +9,7 @@ extern "C" {
 #include "curve.h"
 #include "twist.h"
 #include "pairing.h"
+#include "hash.h"
 }
 
 #include "export.h"
@@ -452,4 +453,10 @@ EXPORT void Finalize(bn256::GT& gt) {
 	gfp12_t f;
 	final_exponentiation(&f, &gt.p);
 	gfp12_set(&gt.p, &f);
+}
+
+// misc
+
+EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len) {
+	hash_g1(&res.p, msg, msg_len, dst, dst_len);
 }

@@ -81,6 +81,9 @@
     <ClInclude Include="exc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hash.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfp_generic.c">
