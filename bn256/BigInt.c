@@ -448,7 +448,7 @@ void bignum_rshift(struct bn* a, struct bn* b, int nbits)
 }
 
 
-void bignum_mod(struct bn* a, struct bn* b, struct bn* c)
+void bignum_mod(const struct bn* a, const struct bn* b, struct bn* c)
 {
     /*
       Take divmod and throw away div part
@@ -462,7 +462,7 @@ void bignum_mod(struct bn* a, struct bn* b, struct bn* c)
     bignum_divmod(a, b, &tmp, c);
 }
 
-void bignum_divmod(struct bn* a, struct bn* b, struct bn* c, struct bn* d)
+void bignum_divmod(const struct bn* a, const struct bn* b, struct bn* c, struct bn* d)
 {
     /*
       Puts a%b in d

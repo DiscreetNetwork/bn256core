@@ -10,8 +10,8 @@ extern "C" {
 void gfp12_set(gfp12_t* c, const gfp12_t* a);
 void gfp12_setzero(gfp12_t* c);
 void gfp12_setone(gfp12_t* c);
-void gfp12_iszero(const gfp12_t* c);
-void gfp12_isone(const gfp12_t* c);
+int gfp12_iszero(const gfp12_t* c);
+int gfp12_isone(const gfp12_t* c);
 void gfp12_conjugate(gfp12_t* c, const gfp12_t* a);
 void gfp12_neg(gfp12_t* c, const gfp12_t* a);
 void gfp12_frobenius(gfp12_t* c, const gfp12_t* a);

@@ -17,11 +17,11 @@ void gfp12_setone(gfp12_t* c) {
 	gfp6_setone(&c->y);
 }
 
-void gfp12_iszero(const gfp12_t* c) {
+int gfp12_iszero(const gfp12_t* c) {
 	return gfp6_iszero(&c->x) && gfp6_iszero(&c->y);
 }
 
-void gfp12_isone(const gfp12_t* c) {
+int gfp12_isone(const gfp12_t* c) {
 	return gfp6_iszero(&c->x) && gfp6_isone(&c->y);
 }
 
@@ -43,13 +43,13 @@ void gfp12_frobenius(gfp12_t* c, const gfp12_t* a) {
 
 void gfp12_frobeniusp2(gfp12_t* c, const gfp12_t* a) {
 	gfp6_frobeniusp2(&c->x, &a->x);
-	gfp6_mulgfp(&c->x, &c->x, &xiToPSquaredMinus1Over6);
+	gfp6_mulgfp(&c->x, &c->x, xiToPSquaredMinus1Over6);
 	gfp6_frobeniusp2(&c->y, &a->y);
 }
 
 void gfp12_frobeniusp4(gfp12_t* c, const gfp12_t* a) {
 	gfp6_frobeniusp4(&c->x, &a->x);
-	gfp6_mulgfp(&c->x, &c->x, &xiToPSquaredMinus1Over3);
+	gfp6_mulgfp(&c->x, &c->x, xiToPSquaredMinus1Over3);
 	gfp6_frobeniusp4(&c->y, &a->y);
 }
 
@@ -79,8 +79,8 @@ void gfp12_mul(gfp12_t* c, const gfp12_t* a, const gfp12_t* b) {
 }
 
 void gfp12_mulscalar(gfp12_t* c, const gfp12_t* a, const gfp6_t* b) {
-	gfp6_mul(&c->x, &a->x, &b);
-	gfp6_mul(&c->y, &a->y, &b);
+	gfp6_mul(&c->x, &a->x, b);
+	gfp6_mul(&c->y, &a->y, b);
 }
 
 void gfp12_square(gfp12_t* c, const gfp12_t* a) {
@@ -102,7 +102,7 @@ void gfp12_square(gfp12_t* c, const gfp12_t* a) {
 }
 
 void gfp12_invert(gfp12_t* c, const gfp12_t* a) {
-	gfp6_t* t1, t2;
+	gfp6_t t1, t2;
 
 	gfp6_square(&t1, &a->x);
 	gfp6_square(&t2, &a->y);

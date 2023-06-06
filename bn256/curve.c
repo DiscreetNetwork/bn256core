@@ -10,6 +10,13 @@ void curvepoint_set(curvepoint_t* c, const curvepoint_t* a) {
 	gfp_set(c->t, a->t);
 }
 
+void curvepoint_zero(curvepoint_t* c) {
+	new_gfp(c->x, 0);
+	new_gfp(c->y, 0);
+	new_gfp(c->z, 0);
+	new_gfp(c->t, 0);
+}
+
 int curvepoint_is_infinity(const curvepoint_t* c) {
 	return gfp_iszero(c->z);
 }

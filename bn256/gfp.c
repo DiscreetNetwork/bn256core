@@ -11,6 +11,22 @@ void mont_decode(gfp_t c, const gfp_t a) {
 	gfp_mul(c, a, one);
 }
 
+void gfp_marshal(void* res, const gfp_t a) {
+	uint64_t* res_p = (uint64_t*)res;
+
+	for (int i = 0; i < 4; i++) {
+		res_p[i] = a[i];
+	}
+}
+
+void gfp_unmarshal(gfp_t c, const void* a) {
+	uint64_t* a_p = (uint64_t*)a;
+
+	for (int i = 0; i < 4; i++) {
+		c[i] = a_p[i];
+	}
+}
+
 void new_gfp(gfp_t res, const int64_t x) {
 	res[0] = 0;
 	res[1] = 0;
@@ -50,8 +66,6 @@ void hash_to_base(gfp_t res, const unsigned char* msg, unsigned long long msg_le
 	gfp_from_bignum(res, &xp);
 
 	mont_encode(res, res);
-
-	return 0;
 }
 
 void gfp_set(gfp_t c, const gfp_t a) {
@@ -70,7 +84,7 @@ void gfp_exp(gfp_t c, const gfp_t f, const uint64_t bits[4]) {
 
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 64; j++) {
-			if ((bits[i] >> j) & 1 == 1) {
+			if (((bits[i] >> j) & 1) == 1) {
 				gfp_mul(sum, sum, power);
 			}
 			gfp_mul(power, power, power);

@@ -9,6 +9,13 @@ void twistpoint_set(twistpoint_t* c, const twistpoint_t* a) {
 	gfp2_set(&c->t, &a->t);
 }
 
+void twistpoint_zero(twistpoint_t* c) {
+	gfp2_setzero(&c->x);
+	gfp2_setzero(&c->y);
+	gfp2_setzero(&c->z);
+	gfp2_setzero(&c->t);
+}
+
 void twistpoint_make_affine(twistpoint_t* c) {
 	if (gfp2_isone(&c->z)) {
 		return;

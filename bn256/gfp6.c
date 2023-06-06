@@ -112,7 +112,7 @@ void gfp6_mulscalar(gfp6_t* c, const gfp6_t* a, const gfp2_t* b) {
 	gfp2_mul(&c->z, &a->z, b);
 }
 
-void gfp6_mulgfp(gfp6_t* c, const gfp6_t* a, gfp_t b) {
+void gfp6_mulgfp(gfp6_t* c, const gfp6_t* a, const gfp_t b) {
 	gfp2_mulscalar(&c->x, &a->x, b);
 	gfp2_mulscalar(&c->y, &a->y, b);
 	gfp2_mulscalar(&c->z, &a->z, b);

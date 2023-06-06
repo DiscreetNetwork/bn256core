@@ -140,8 +140,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BigInt.h" />
+    <ClInclude Include="bn256.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="curve.h" />
+    <ClInclude Include="exc.h" />
+    <ClInclude Include="export.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="gfp.h" />
     <ClInclude Include="gfp12.h" />
@@ -151,6 +154,7 @@
     <ClInclude Include="hmacsha256.h" />
     <ClInclude Include="pairing.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="random.h" />
     <ClInclude Include="sha256.h" />
     <ClInclude Include="twist.h" />
     <ClInclude Include="types.h" />
@@ -159,8 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BigInt.c" />
+    <ClCompile Include="bn256.cpp" />
     <ClCompile Include="constants.c" />
     <ClCompile Include="curve.c" />
+    <ClCompile Include="exc.cpp" />
     <ClCompile Include="gfp.c" />
     <ClCompile Include="gfp12.c" />
     <ClCompile Include="gfp2.c" />
@@ -169,6 +175,7 @@
     <ClCompile Include="hash.c" />
     <ClCompile Include="hmacsha256.c" />
     <ClCompile Include="pairing.c" />
+    <ClCompile Include="random.c" />
     <ClCompile Include="sha256.c" />
     <ClCompile Include="twist.c" />
     <ClCompile Include="verify.c" />

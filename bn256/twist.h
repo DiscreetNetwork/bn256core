@@ -8,6 +8,7 @@ extern "C" {
 #include "types.h"
 
 void twistpoint_set(twistpoint_t* c, const twistpoint_t* a);
+void twistpoint_zero(twistpoint_t* c);
 void twistpoint_make_affine(twistpoint_t* c);
 void twistpoint_set_infinity(twistpoint_t* c);
 int twistpoint_is_infinity(const twistpoint_t* c);

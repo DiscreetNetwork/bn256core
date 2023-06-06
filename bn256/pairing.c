@@ -16,7 +16,7 @@ void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const tw
 
 	gfp2_add(&D, &p->y, &r->z);
 	gfp2_square(&D, &D);
-	gfp2_sub(&D, &D, &r2);
+	gfp2_sub(&D, &D, r2);
 	gfp2_sub(&D, &D, &r->t);
 	gfp2_mul(&D, &D, &r->t);
 
@@ -53,20 +53,20 @@ void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const tw
 
 	gfp2_add(&t, &p->y, &r0.z);
 	gfp2_square(&t, &t);
-	gfp2_sub(&t, &t, &r2);
+	gfp2_sub(&t, &t, r2);
 	gfp2_sub(&t, &t, &r0.t);
 
 	gfp2_mul(&t2, &L1, &p->x);
 	gfp2_add(&t2, &t2, &t2);
 
-	gfp2_sub(&a, &t2, &t);
+	gfp2_sub(a, &t2, &t);
 
-	gfp2_mulscalar(&c, &r0.z, q->y);
-	gfp2_add(&c, &c, &c);
+	gfp2_mulscalar(c, &r0.z, q->y);
+	gfp2_add(c, c, c);
 	
-	gfp2_neg(&b, &L1);
-	gfp2_mulscalar(&b, &b, q->x);
-	gfp2_add(&b, &b, &b);
+	gfp2_neg(b, &L1);
+	gfp2_mulscalar(b, b, q->x);
+	gfp2_add(b, b, b);
 
 	twistpoint_set(rout, &r0);
 }
@@ -109,20 +109,20 @@ void line_func_double(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const
 
 	gfp2_mul(&t, &E, &r->t);
 	gfp2_add(&t, &t, &t);
-	gfp2_neg(&b, &t);
-	gfp2_mulscalar(&b, &b, q->x);
+	gfp2_neg(b, &t);
+	gfp2_mulscalar(b, b, q->x);
 	
-	gfp2_add(&a, &r->x, &E);
-	gfp2_square(&a, &a);
-	gfp2_sub(&a, &a, &A);
-	gfp2_sub(&a, &a, &G);
+	gfp2_add(a, &r->x, &E);
+	gfp2_square(a, a);
+	gfp2_sub(a, a, &A);
+	gfp2_sub(a, a, &G);
 	gfp2_add(&t, &B, &B);
 	gfp2_add(&t, &t, &t);
-	gfp2_sub(&a, &a, &t);
+	gfp2_sub(a, a, &t);
 
-	gfp2_mul(&c, &r0.z, &r->t);
-	gfp2_add(&c, &c, &c);
-	gfp2_mulscalar(&c, &c, q->y);
+	gfp2_mul(c, &r0.z, &r->t);
+	gfp2_add(c, c, c);
+	gfp2_mulscalar(c, c, q->y);
 
 	twistpoint_set(rout, &r0);
 }
@@ -137,7 +137,7 @@ void mul_line(gfp12_t* ret, const gfp2_t* a, const gfp2_t* b, const gfp2_t* c) {
 	gfp6_mul(&a2, &a2, &ret->x);
 	gfp6_mulscalar(&t3, &ret->y, c);
 
-	gfp2_add(&t, &b, &c);
+	gfp2_add(&t, b, c);
 	gfp2_setzero(&t2.x);
 	gfp2_set(&t2.y, a);
 	gfp2_set(&t2.z, &t);
@@ -211,7 +211,7 @@ void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p) {
 	gfp2_setone(&q1.z);
 	gfp2_setone(&q1.t);
 
-	gfp2_mulscalar(&minusQ2.x, &aAffine.x, &xiToPSquaredMinus1Over3);
+	gfp2_mulscalar(&minusQ2.x, &aAffine.x, xiToPSquaredMinus1Over3);
 	gfp2_set(&minusQ2.y, &aAffine.y);
 	gfp2_setone(&minusQ2.z);
 	gfp2_setone(&minusQ2.t);

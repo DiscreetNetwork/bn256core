@@ -8,6 +8,7 @@ extern "C" {
 #endif // __cplusplus
 
 void curvepoint_set(curvepoint_t* c, const curvepoint_t* a);
+void curvepoint_zero(curvepoint_t* c);
 int curvepoint_is_infinity(const curvepoint_t* c);
 void curvepoint_set_infinity(curvepoint_t* c);
 void curvepoint_make_affine(curvepoint_t* c);

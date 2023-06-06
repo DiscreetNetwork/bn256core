@@ -69,6 +69,18 @@
     <ClInclude Include="pairing.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="bn256.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="export.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gfp_generic.c">
@@ -111,6 +123,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pairing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bn256.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="random.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
