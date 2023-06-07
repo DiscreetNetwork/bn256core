@@ -65,6 +65,10 @@ EXPORT int ScalarBit(bn256::Scalar& k, int i);
 EXPORT void GFpMul(gfp_t c, const gfp_t a, const gfp_t b);
 EXPORT void NewGFp(gfp_t a, int64_t x);
 EXPORT void GFpNeg(gfp_t c, const gfp_t a);
+EXPORT void GFpExp(gfp_t c, const gfp_t a, const uint64_t bits[4]);
+EXPORT void GFpInvert(gfp_t c, const gfp_t a);
+EXPORT void GFpSqrt(gfp_t c, const gfp_t a);
+EXPORT void GFpAdd(gfp_t c, const gfp_t a, const gfp_t b);
 
 EXPORT void RandomG1(bn256::G1& g1, bn256::Scalar& k);
 EXPORT bn256::G1 RandomG1_1();
@@ -115,7 +119,7 @@ EXPORT void Pair(bn256::GT& gt, bn256::G1& p, bn256::G2& q);
 EXPORT bn256::GT Pair_1(bn256::G1& p, bn256::G2& q);
 EXPORT void Miller(bn256::GT& gt, bn256::G1& p, bn256::G2& q);
 EXPORT bn256::GT Miller_1(bn256::G1& p, bn256::G2& q);
-EXPORT void Finalize(bn256::GT& gt);
+EXPORT void FinalizeGT(bn256::GT& gt);
 
 EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len);
 

@@ -51,6 +51,22 @@ EXPORT void GFpNeg(gfp_t c, const gfp_t a) {
 	gfp_neg(c, a);
 }
 
+EXPORT void GFpExp(gfp_t c, const gfp_t a, const uint64_t bits[4]) {
+	gfp_exp(c, a, bits);
+}
+
+EXPORT void GFpInvert(gfp_t c, const gfp_t a) {
+	gfp_invert(c, a);
+}
+
+EXPORT void GFpSqrt(gfp_t c, const gfp_t a) {
+	gfp_sqrt(c, a);
+}
+
+EXPORT void GFpAdd(gfp_t c, const gfp_t a, const gfp_t b) {
+	gfp_add(c, a, b);
+}
+
 EXPORT void RandomG1(G1& g1, Scalar& k) {
 	random_scalar(&k.n);
 	curvepoint_zero(&g1.p);
@@ -476,7 +492,7 @@ EXPORT GT Miller_1(G1& p, G2& q) {
 	return gt;
 }
 
-EXPORT void Finalize(GT& gt) {
+EXPORT void FinalizeGT(GT& gt) {
 	gfp12_t f;
 	final_exponentiation(&f, &gt.p);
 	gfp12_set(&gt.p, &f);
