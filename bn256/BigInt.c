@@ -73,9 +73,9 @@ void gfp_from_bignum(gfp_t c, struct bn* n) {
 }
 
 int bignum_wordlen(struct bn* n) {
-    int i = BN_ARRAY_SIZE;
-    while (i > 0 && n->array[--i] == 0);
-    return i + 1;
+    int i = 0;
+    while (i < BN_ARRAY_SIZE && n->array[i] != 0) i++;
+    return i;
 }
 
 static uint8_t len8tab[256] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 };
@@ -94,26 +94,30 @@ inline int bitslen(uint32_t x) {
 }
 
 int bignum_bitlen(struct bn* n) {
-    int i = BN_ARRAY_SIZE;
-    while (i > 0 && n->array[--i] == 0);
-    if (i <= 0) return 0;
+    int i = bignum_wordlen(n) - 1;
 
-    uint32_t top = n->array[i];
-    top |= top >> 1;
-    top |= top >> 2;
-    top |= top >> 4;
-    top |= top >> 8;
-    top |= top >> 16;
-    top |= (top >> 16) >> 16;
-    return i * WORD_SIZE * 8 + bitslen(top);
+    if (i >= 0) {
+        uint32_t top = n->array[i];
+        top |= top >> 1;
+        top |= top >> 2;
+        top |= top >> 4;
+        top |= top >> 8;
+        top |= top >> 16;
+        top |= (top >> 16) >> 16;
+        return i * WORD_SIZE * 8 + bitslen(top);
+    }
+
+    return 0;
 }
 
 int bignum_bit(struct bn* n, int i) {
-    require(i < 0, "negative bit check");
+    require(i >= 0, "negative bit check");
 
     int j = i / (WORD_SIZE * 8);
     if (j >= bignum_wordlen(n)) return 0;
-    return (int)(n->array[j] >> ((uint32_t)i % (WORD_SIZE * 8) & 1));
+    uint32_t shift = (uint32_t)i % (WORD_SIZE * 8);
+
+    return (int)((n->array[j] >> shift) & 1);
 }
 
 

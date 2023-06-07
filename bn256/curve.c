@@ -66,6 +66,7 @@ int curvepoint_is_on_curve(const curvepoint_t* c) {
 	return gfp_equal(y2, x3);
 }
 
+// verified
 void curvepoint_double(curvepoint_t* c, const curvepoint_t* a) {
 	gfp_t A, B, C;
 	gfp_t t, t2;
@@ -99,6 +100,7 @@ void curvepoint_double(curvepoint_t* c, const curvepoint_t* a) {
 	gfp_sub(c->y, t2, t);
 }
 
+// verified
 void curvepoint_add(curvepoint_t* c, const curvepoint_t* a, const curvepoint_t* b) {
 	if (curvepoint_is_infinity(a)) {
 		curvepoint_set(c, b);
@@ -173,6 +175,7 @@ void curvepoint_add(curvepoint_t* c, const curvepoint_t* a, const curvepoint_t* 
 
 void curvepoint_mul(curvepoint_t* c, const curvepoint_t* a, const struct bn* scalar) {
 	curvepoint_t sum, t;
+	curvepoint_zero(&t);
 	curvepoint_set_infinity(&sum);
 
 	for (int i = bignum_bitlen(scalar); i >= 0; i--) {

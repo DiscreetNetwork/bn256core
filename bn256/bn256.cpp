@@ -10,11 +10,14 @@ extern "C" {
 #include "twist.h"
 #include "pairing.h"
 #include "hash.h"
+#include "export.h"
+#include "gfp_generic.h"
 }
 
-#include "export.h"
 #include "bn256.h"
 #include "exc.h"
+
+using namespace bn256;
 
 static inline void random_scalar(struct bn* k) {
 	struct bn tmp;
@@ -24,14 +27,38 @@ static inline void random_scalar(struct bn* k) {
 	bignum_mod(&tmp, &order, k);
 }
 
-EXPORT void RandomG1(bn256::G1& g1, bn256::Scalar& k) {
+EXPORT void TestIfWorks(int* a, int b) {
+	*a = 2 * b;
+}
+
+EXPORT int ScalarBitlen(Scalar& k) {
+	return bignum_bitlen(&k.n);
+}
+
+EXPORT int ScalarBit(Scalar& k, int i) {
+	return bignum_bit(&k.n, i);
+}
+
+EXPORT void GFpMul(gfp_t c, const gfp_t a, const gfp_t b) {
+	gfp_mul(c, a, b);
+}
+
+EXPORT void NewGFp(gfp_t a, int64_t x) {
+	new_gfp(a, x);
+}
+
+EXPORT void GFpNeg(gfp_t c, const gfp_t a) {
+	gfp_neg(c, a);
+}
+
+EXPORT void RandomG1(G1& g1, Scalar& k) {
 	random_scalar(&k.n);
 	curvepoint_zero(&g1.p);
 	curvepoint_mul(&g1.p, &g1gen, &k.n);
 }
 
-EXPORT bn256::G1 RandomG1_1() {
-	bn256::G1 g1;
+EXPORT G1 RandomG1_1() {
+	G1 g1;
 	struct bn k;
 	random_scalar(&k);
 	curvepoint_zero(&g1.p);
@@ -39,55 +66,55 @@ EXPORT bn256::G1 RandomG1_1() {
 	return g1;
 }
 
-EXPORT void ScalarBaseMultG1(bn256::G1& gk, bn256::Scalar& k) {
+EXPORT void ScalarBaseMultG1(G1& gk, Scalar& k) {
 	curvepoint_zero(&gk.p);
 	curvepoint_mul(&gk.p, &g1gen, &k.n);
 }
 
-EXPORT bn256::G1 ScalarBaseMultG1_1(bn256::Scalar& k) {
-	bn256::G1 gk;
+EXPORT G1 ScalarBaseMultG1_1(Scalar& k) {
+	G1 gk;
 	curvepoint_zero(&gk.p);
 	curvepoint_mul(&gk.p, &g1gen, &k.n);
 	return gk;
 }
 
-EXPORT void ScalarMultG1(bn256::G1& ak, bn256::G1& a, bn256::Scalar& k) {
+EXPORT void ScalarMultG1(G1& ak, G1& a, Scalar& k) {
 	curvepoint_zero(&ak.p);
 	curvepoint_mul(&ak.p, &a.p, &k.n);
 }
 
-EXPORT bn256::G1 ScalarMultG1_1(bn256::G1& a, bn256::Scalar& k) {
-	bn256::G1 ak;
+EXPORT G1 ScalarMultG1_1(G1& a, Scalar& k) {
+	G1 ak;
 	curvepoint_zero(&ak.p);
 	curvepoint_mul(&ak.p, &a.p, &k.n);
 	return ak;
 }
 
-EXPORT void AddG1(bn256::G1& ab, bn256::G1& a, bn256::G1& b) {
+EXPORT void AddG1(G1& ab, G1& a, G1& b) {
 	curvepoint_zero(&ab.p);
 	curvepoint_add(&ab.p, &a.p, &b.p);
 }
 
-EXPORT bn256::G1 AddG1_1(bn256::G1& a, bn256::G1& b) {
-	bn256::G1 ab;
+EXPORT G1 AddG1_1(G1& a, G1& b) {
+	G1 ab;
 	curvepoint_zero(&ab.p);
 	curvepoint_add(&ab.p, &a.p, &b.p);
 	return ab;
 }
 
-EXPORT void NegG1(bn256::G1& na, bn256::G1& a) {
+EXPORT void NegG1(G1& na, G1& a) {
 	curvepoint_zero(&na.p);
 	curvepoint_neg(&na.p, &a.p);
 }
 
-EXPORT bn256::G1 NegG1_1(bn256::G1& a) {
-	bn256::G1 na;
+EXPORT G1 NegG1_1(G1& a) {
+	G1 na;
 	curvepoint_zero(&na.p);
 	curvepoint_neg(&na.p, &a.p);
 	return na;
 }
 
-EXPORT void MarshalG1(bn256::G1enc& res, bn256::G1& a) {
+EXPORT void MarshalG1(G1enc& res, G1& a) {
 	curvepoint_make_affine(&a.p);
 	for (int i = 0; i < sizeof(res.bytes) / sizeof(res.bytes[0]); i++) {
 		res.bytes[i] = 0;
@@ -103,8 +130,8 @@ EXPORT void MarshalG1(bn256::G1enc& res, bn256::G1& a) {
 	gfp_marshal(&res.bytes[32], tmp);
 }
 
-EXPORT bn256::G1enc MarshalG1_1(bn256::G1& a) {
-	bn256::G1enc res;
+EXPORT G1enc MarshalG1_1(G1& a) {
+	G1enc res;
 	curvepoint_make_affine(&a.p);
 	for (int i = 0; i < sizeof(res.bytes) / sizeof(res.bytes[0]); i++) {
 		res.bytes[i] = 0;
@@ -122,7 +149,7 @@ EXPORT bn256::G1enc MarshalG1_1(bn256::G1& a) {
 	return res;
 }
 
-EXPORT void UnmarshalG1(bn256::G1& a, bn256::G1enc& e) {
+EXPORT void UnmarshalG1(G1& a, G1enc& e) {
 	curvepoint_zero(&a.p);
 
 	gfp_unmarshal(a.p.x, &e.bytes[0]);
@@ -144,78 +171,78 @@ EXPORT void UnmarshalG1(bn256::G1& a, bn256::G1enc& e) {
 	}
 }
 
-EXPORT bn256::G1 UnmarshalG1_1(bn256::G1enc& e) {
-	bn256::G1 a;
+EXPORT G1 UnmarshalG1_1(G1enc& e) {
+	G1 a;
 	UnmarshalG1(a, e);
 	return a;
 }
 
 // G2
 
-EXPORT void RandomG2(bn256::G2& g2, bn256::Scalar& k) {
+EXPORT void RandomG2(G2& g2, Scalar& k) {
 	random_scalar(&k.n);
 	twistpoint_zero(&g2.p);
 	twistpoint_mul(&g2.p, &g2gen, &k.n);
 }
 
-EXPORT bn256::G2 RandomG2_1() {
+EXPORT G2 RandomG2_1() {
 	struct bn k;
-	bn256::G2 g2;
+	G2 g2;
 	random_scalar(&k);
 	twistpoint_zero(&g2.p);
 	twistpoint_mul(&g2.p, &g2gen, &k);
 	return g2;
 }
 
-EXPORT void ScalarBaseMultG2(bn256::G2& gk, bn256::Scalar& k) {
+EXPORT void ScalarBaseMultG2(G2& gk, Scalar& k) {
 	twistpoint_zero(&gk.p);
 	twistpoint_mul(&gk.p, &g2gen, &k.n);
 }
 
-EXPORT bn256::G2 ScalarBaseMultG2_1(bn256::Scalar& k) {
-	bn256::G2 gk;
+EXPORT G2 ScalarBaseMultG2_1(Scalar& k) {
+	G2 gk;
 	twistpoint_zero(&gk.p);
 	twistpoint_mul(&gk.p, &g2gen, &k.n);
 	return gk;
 }
 
-EXPORT void ScalarMultG2(bn256::G2& ak, bn256::G2& a, bn256::Scalar& k) {
+EXPORT void ScalarMultG2(G2& ak, G2& a, Scalar& k) {
 	twistpoint_zero(&ak.p);
 	twistpoint_mul(&ak.p, &a.p, &k.n);
 }
 
-EXPORT bn256::G2 ScalarMultG2_1(bn256::G2& a, bn256::Scalar& k) {
-	bn256::G2 ak;
+EXPORT G2 ScalarMultG2_1(G2& a, Scalar& k) {
+	G2 ak;
 	twistpoint_zero(&ak.p);
 	twistpoint_mul(&ak.p, &a.p, &k.n);
 	return ak;
 }
 
-EXPORT void AddG2(bn256::G2& ab, bn256::G2& a, bn256::G2& b) {
+EXPORT void AddG2(G2& ab, G2& a, G2& b) {
 	twistpoint_zero(&ab.p);
 	twistpoint_add(&ab.p, &a.p, &b.p);
 }
 
-EXPORT bn256::G2 AddG2_1(bn256::G2& a, bn256::G2& b) {
-	bn256::G2 ab;
+EXPORT G2 AddG2_1(G2& a, G2& b) {
+	G2 ab;
 	twistpoint_zero(&ab.p);
 	twistpoint_add(&ab.p, &a.p, &b.p);
 	return ab;
 }
 
-EXPORT void NegG2(bn256::G2& na, bn256::G2& a) {
+EXPORT void NegG2(G2& na, G2& a) {
 	twistpoint_zero(&na.p);
 	twistpoint_neg(&na.p, &a.p);
 }
 
-EXPORT bn256::G2 NegG2_1(bn256::G2& a) {
-	bn256::G2 na;
+EXPORT G2 NegG2_1(G2& a) {
+	G2 na;
 	twistpoint_zero(&na.p);
 	twistpoint_neg(&na.p, &a.p);
 	return na;
 }
 
-EXPORT void MarshalG2(bn256::G2enc& res, bn256::G2& a) {
+EXPORT void MarshalG2(G2enc& res, G2& a) {
 	twistpoint_make_affine(&a.p);
 	for (int i = 0; i < sizeof(res.bytes) / sizeof(res.bytes[0]); i++) {
 		res.bytes[i] = 0;
@@ -237,13 +264,13 @@ EXPORT void MarshalG2(bn256::G2enc& res, bn256::G2& a) {
 	gfp_marshal(&res.bytes[97], tmp);
 }
 
-EXPORT bn256::G2enc MarshalG2_1(bn256::G2& a) {
-	bn256::G2enc res;
+EXPORT G2enc MarshalG2_1(G2& a) {
+	G2enc res;
 	MarshalG2(res, a);
 	return res;
 }
 
-EXPORT void UnmarshalG2(bn256::G2& a, bn256::G2enc& e) {
+EXPORT void UnmarshalG2(G2& a, G2enc& e) {
 	if (e.bytes[0] == 0) {
 		twistpoint_set_infinity(&a.p);
 		return;
@@ -277,78 +304,78 @@ EXPORT void UnmarshalG2(bn256::G2& a, bn256::G2enc& e) {
 	}
 }
 
-EXPORT bn256::G2 UnmarshalG2_1(bn256::G2enc& e) {
-	bn256::G2 a;
+EXPORT G2 UnmarshalG2_1(G2enc& e) {
+	G2 a;
 	UnmarshalG2(a, e);
 	return a;
 }
 
 // GT
 
-EXPORT void RandomGT(bn256::GT& gt, bn256::Scalar& k) {
+EXPORT void RandomGT(GT& gt, Scalar& k) {
 	random_scalar(&k.n);
 	gfp12_setzero(&gt.p);
 	gfp12_exp(&gt.p, &gfp12gen, &k.n);
 }
 
-EXPORT bn256::GT RandomGT_1() {
+EXPORT GT RandomGT_1() {
 	struct bn k;
-	bn256::GT gt;
+	GT gt;
 	random_scalar(&k);
 	gfp12_setzero(&gt.p);
 	gfp12_exp(&gt.p, &gfp12gen, &k);
 	return gt;
 }
 
-EXPORT void ScalarBaseMultGT(bn256::GT& gk, bn256::Scalar& k) {
+EXPORT void ScalarBaseMultGT(GT& gk, Scalar& k) {
 	gfp12_setzero(&gk.p);
 	gfp12_exp(&gk.p, &gfp12gen, &k.n);
 }
 
-EXPORT bn256::GT ScalarBaseMultGT_1(bn256::Scalar& k) {
-	bn256::GT gk;
+EXPORT GT ScalarBaseMultGT_1(Scalar& k) {
+	GT gk;
 	gfp12_setzero(&gk.p);
 	gfp12_exp(&gk.p, &gfp12gen, &k.n);
 	return gk;
 }
 
-EXPORT void ScalarMultGT(bn256::GT& ak, bn256::GT& a, bn256::Scalar& k) {
+EXPORT void ScalarMultGT(GT& ak, GT& a, Scalar& k) {
 	gfp12_setzero(&ak.p);
 	gfp12_exp(&ak.p, &a.p, &k.n);
 }
 
-EXPORT bn256::GT ScalarMultGT_1(bn256::GT& a, bn256::Scalar& k) {
-	bn256::GT ak;
+EXPORT GT ScalarMultGT_1(GT& a, Scalar& k) {
+	GT ak;
 	gfp12_setzero(&ak.p);
 	gfp12_exp(&ak.p, &a.p, &k.n);
 	return ak;
 }
 
-EXPORT void AddGT(bn256::GT& ab, bn256::GT& a, bn256::GT& b) {
+EXPORT void AddGT(GT& ab, GT& a, GT& b) {
 	gfp12_setzero(&ab.p);
 	gfp12_mul(&ab.p, &a.p, &b.p);
 }
 
-EXPORT bn256::GT AddGT_1(bn256::GT& a, bn256::GT& b) {
-	bn256::GT ab;
+EXPORT GT AddGT_1(GT& a, GT& b) {
+	GT ab;
 	gfp12_setzero(&ab.p);
 	gfp12_mul(&ab.p, &a.p, &b.p);
 	return ab;
 }
 
-EXPORT void NegGT(bn256::GT& na, bn256::GT& a) {
+EXPORT void NegGT(GT& na, GT& a) {
 	gfp12_setzero(&na.p);
 	gfp12_neg(&na.p, &a.p);
 }
 
-EXPORT bn256::GT NegG2_1(bn256::GT& a) {
-	bn256::GT na;
+EXPORT GT NegGT_1(GT& a) {
+	GT na;
 	gfp12_setzero(&na.p);
 	gfp12_neg(&na.p, &a.p);
 	return na;
 }
 
-EXPORT void MarshalGT(bn256::GTenc& res, bn256::GT& a) {
+EXPORT void MarshalGT(GTenc& res, GT& a) {
 	for (int i = 0; i < sizeof(res.bytes) / sizeof(res.bytes[0]); i++) {
 		res.bytes[i] = 0;
 	}
@@ -381,13 +408,13 @@ EXPORT void MarshalGT(bn256::GTenc& res, bn256::GT& a) {
 	gfp_marshal(&res.bytes[32 * 11], tmp);
 }
 
-EXPORT bn256::GTenc MarshalGT_1(bn256::GT& a) {
-	bn256::GTenc res;
+EXPORT GTenc MarshalGT_1(GT& a) {
+	GTenc res;
 	MarshalGT(res, a);
 	return res;
 }
 
-EXPORT void UnmarshalGT(bn256::GT& a, bn256::GTenc& e) {
+EXPORT void UnmarshalGT(GT& a, GTenc& e) {
 	gfp12_setzero(&a.p);
 
 	gfp_unmarshal(a.p.x.x.x, &e.bytes[32 * 0]);
@@ -417,39 +444,39 @@ EXPORT void UnmarshalGT(bn256::GT& a, bn256::GTenc& e) {
 	mont_encode(a.p.y.z.y, a.p.y.z.y);
 }
 
-EXPORT bn256::GT UnmarshalGT_1(bn256::GTenc& e) {
-	bn256::GT a;
+EXPORT GT UnmarshalGT_1(GTenc& e) {
+	GT a;
 	UnmarshalGT(a, e);
 	return a;
 }
 
 // Pairing
 
-EXPORT void Pair(bn256::GT& gt, bn256::G1& p, bn256::G2& q) {
+EXPORT void Pair(GT& gt, G1& p, G2& q) {
 	gfp12_setzero(&gt.p);
 	optimal_ate(&gt.p, &q.p, &p.p);
 }
 
-EXPORT bn256::GT Pair_1(bn256::G1& p, bn256::G2& q) {
-	bn256::GT gt;
+EXPORT GT Pair_1(G1& p, G2& q) {
+	GT gt;
 	gfp12_setzero(&gt.p);
 	optimal_ate(&gt.p, &q.p, &p.p);
 	return gt;
 }
 
-EXPORT void Miller(bn256::GT& gt, bn256::G1& p, bn256::G2& q) {
+EXPORT void Miller(GT& gt, G1& p, G2& q) {
 	gfp12_setzero(&gt.p);
 	miller(&gt.p, &q.p, &p.p);
 }
 
-EXPORT bn256::GT Miller_1(bn256::G1& p, bn256::G2& q) {
-	bn256::GT gt;
+EXPORT GT Miller_1(G1& p, G2& q) {
+	GT gt;
 	gfp12_setzero(&gt.p);
 	miller(&gt.p, &q.p, &p.p);
 	return gt;
 }
 
-EXPORT void Finalize(bn256::GT& gt) {
+EXPORT void Finalize(GT& gt) {
 	gfp12_t f;
 	final_exponentiation(&f, &gt.p);
 	gfp12_set(&gt.p, &f);
@@ -457,6 +484,6 @@ EXPORT void Finalize(bn256::GT& gt) {
 
 // misc
 
-EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len) {
+EXPORT void HashG1(G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len) {
 	hash_g1(&res.p, msg, msg_len, dst, dst_len);
 }

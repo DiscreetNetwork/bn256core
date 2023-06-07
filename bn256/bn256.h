@@ -55,6 +55,17 @@ namespace bn256 {
 	};
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+EXPORT void TestIfWorks(int* a, int b);
+EXPORT int ScalarBitlen(bn256::Scalar& k);
+EXPORT int ScalarBit(bn256::Scalar& k, int i);
+EXPORT void GFpMul(gfp_t c, const gfp_t a, const gfp_t b);
+EXPORT void NewGFp(gfp_t a, int64_t x);
+EXPORT void GFpNeg(gfp_t c, const gfp_t a);
+
 EXPORT void RandomG1(bn256::G1& g1, bn256::Scalar& k);
 EXPORT bn256::G1 RandomG1_1();
 EXPORT void ScalarBaseMultG1(bn256::G1&gk, bn256::Scalar& k);
@@ -94,7 +105,7 @@ EXPORT bn256::GT ScalarMultGT_1(bn256::GT& a, bn256::Scalar& k);
 EXPORT void AddGT(bn256::GT& ab, bn256::GT& a, bn256::GT& b);
 EXPORT bn256::GT AddGT_1(bn256::GT& a, bn256::GT& b);
 EXPORT void NegGT(bn256::GT& na, bn256::GT& a);
-EXPORT bn256::GT NegG2_1(bn256::GT& a);
+EXPORT bn256::GT NegGT_1(bn256::GT& a);
 EXPORT void MarshalGT(bn256::GTenc& res, bn256::GT& a);
 EXPORT bn256::GTenc MarshalGT_1(bn256::GT& a);
 EXPORT void UnmarshalGT(bn256::GT& a, bn256::GTenc& e);
@@ -107,5 +118,9 @@ EXPORT bn256::GT Miller_1(bn256::G1& p, bn256::G2& q);
 EXPORT void Finalize(bn256::GT& gt);
 
 EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BN256_H
