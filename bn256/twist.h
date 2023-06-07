@@ -12,7 +12,7 @@ void twistpoint_zero(twistpoint_t* c);
 void twistpoint_make_affine(twistpoint_t* c);
 void twistpoint_set_infinity(twistpoint_t* c);
 int twistpoint_is_infinity(const twistpoint_t* c);
-int twistpoint_is_on_curve(const twistpoint_t* c);
+int twistpoint_is_on_curve(twistpoint_t* c);
 void twistpoint_double(twistpoint_t* c, const twistpoint_t* a);
 void twistpoint_add(twistpoint_t* c, const twistpoint_t* a, const twistpoint_t* b);
 void twistpoint_mul(twistpoint_t* c, const twistpoint_t* a, const struct bn* scalar);

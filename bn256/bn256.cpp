@@ -67,6 +67,30 @@ EXPORT void GFpAdd(gfp_t c, const gfp_t a, const gfp_t b) {
 	gfp_add(c, a, b);
 }
 
+EXPORT void GFpSub(gfp_t c, const gfp_t a, const gfp_t b) {
+	gfp_sub(c, a, b);
+}
+
+EXPORT void GFp2Add(gfp2_t* c, const gfp2_t* a, const gfp2_t* b) {
+	gfp2_add(c, a, b);
+}
+
+EXPORT void GFp2Sub(gfp2_t* c, const gfp2_t* a, const gfp2_t* b) {
+	gfp2_sub(c, a, b);
+}
+
+EXPORT void GFp2Mul(gfp2_t* c, const gfp2_t* a, const gfp2_t* b) {
+	gfp2_mul(c, a, b);
+}
+
+EXPORT void GFp2Square(gfp2_t* c, const gfp2_t* a) {
+	gfp2_square(c, a);
+}
+
+EXPORT void GFp2Invert(gfp2_t* c, const gfp2_t* a) {
+	gfp2_invert(c, a);
+}
+
 EXPORT void RandomG1(G1& g1, Scalar& k) {
 	random_scalar(&k.n);
 	curvepoint_zero(&g1.p);

@@ -139,7 +139,11 @@ int gfp_iszero(const gfp_t f) {
 }
 
 int gfp_isone(const gfp_t f) {
-	return f[0] == 1 && f[1] == 0 && f[2] == 0 && f[3] == 0;
+	//return f[0] == 1 && f[1] == 0 && f[2] == 0 && f[3] == 0;
+	return f[0] == 0xe7a35393a1f76999
+		&& f[1] == 0x11a4772edf4a4a61
+		&& f[2] == 0x559013479e7b23de
+		&& f[3] == 0x704afe1cb55c7806;
 }
 
 int gfp_equal(const gfp_t a, const gfp_t b) {

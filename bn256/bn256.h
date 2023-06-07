@@ -69,6 +69,13 @@ EXPORT void GFpExp(gfp_t c, const gfp_t a, const uint64_t bits[4]);
 EXPORT void GFpInvert(gfp_t c, const gfp_t a);
 EXPORT void GFpSqrt(gfp_t c, const gfp_t a);
 EXPORT void GFpAdd(gfp_t c, const gfp_t a, const gfp_t b);
+EXPORT void GFpSub(gfp_t c, const gfp_t a, const gfp_t b);
+
+EXPORT void GFp2Add(gfp2_t* c, const gfp2_t* a, const gfp2_t* b);
+EXPORT void GFp2Sub(gfp2_t* c, const gfp2_t* a, const gfp2_t* b);
+EXPORT void GFp2Mul(gfp2_t* c, const gfp2_t* a, const gfp2_t* b);
+EXPORT void GFp2Square(gfp2_t* c, const gfp2_t* a);
+EXPORT void GFp2Invert(gfp2_t* c, const gfp2_t* a);
 
 EXPORT void RandomG1(bn256::G1& g1, bn256::Scalar& k);
 EXPORT bn256::G1 RandomG1_1();

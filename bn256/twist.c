@@ -50,7 +50,7 @@ int twistpoint_is_infinity(const twistpoint_t* c) {
 	return gfp2_iszero(&c->z);
 }
 
-int twistpoint_is_on_curve(const twistpoint_t* c) {
+int twistpoint_is_on_curve(twistpoint_t* c) {
 	twistpoint_make_affine(c);
 
 	if (twistpoint_is_infinity(c)) {
@@ -163,7 +163,8 @@ void twistpoint_add(twistpoint_t* c, const twistpoint_t* a, const twistpoint_t* 
 
 void twistpoint_mul(twistpoint_t* c, const twistpoint_t* a, const struct bn* scalar) {
 	twistpoint_t sum, t;
-	twistpoint_set_infinity(&sum);
+	//twistpoint_set_infinity(&sum);
+	twistpoint_zero(&sum);
 
 	for (int i = bignum_bitlen(scalar); i >= 0; i--) {
 		twistpoint_double(&t, &sum);

@@ -117,7 +117,7 @@ void gfp2_invert(gfp2_t* c, const gfp2_t* a) {
 	gfp_neg(t1, a->x);
 
 	gfp_mul(c->x, t1, inv);
-	gfp_mul(c->x, a->y, inv);
+	gfp_mul(c->y, a->y, inv);
 }
 
 int gfp2_equal(const gfp2_t* a, const gfp2_t* b) {
