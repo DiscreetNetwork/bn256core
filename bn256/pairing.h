@@ -7,7 +7,7 @@ extern "C" {
 
 #include "types.h"
 
-void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* r2);
+void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* rr2);
 void line_func_double(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const curvepoint_t* q);
 void mul_line(gfp12_t* ret, const gfp2_t* a, const gfp2_t* b, const gfp2_t* c);
 void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p);

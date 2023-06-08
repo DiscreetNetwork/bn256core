@@ -8,15 +8,17 @@
 #include "constants.h"
 #include "types.h"
 
-void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* r2) {
+void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* rr2) {
 	gfp2_t B, D, H, I, E, J, L1, V, t, t2;
 	twistpoint_t r0;
 
-	gfp2_mul(&B, &p->x, &r->t);
+	twistpoint_zero(&r0);
 
-	gfp2_add(&D, &p->y, &r->z);
-	gfp2_square(&D, &D);
-	gfp2_sub(&D, &D, r2);
+	gfp2_mul(&B, &p->x, &r->t); // 0
+
+	gfp2_add(&D, &p->y, &r->z); // 1
+	gfp2_square(&D, &D); // 
+	gfp2_sub(&D, &D, rr2);
 	gfp2_sub(&D, &D, &r->t);
 	gfp2_mul(&D, &D, &r->t);
 
@@ -53,7 +55,7 @@ void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const tw
 
 	gfp2_add(&t, &p->y, &r0.z);
 	gfp2_square(&t, &t);
-	gfp2_sub(&t, &t, r2);
+	gfp2_sub(&t, &t, rr2);
 	gfp2_sub(&t, &t, &r0.t);
 
 	gfp2_mul(&t2, &L1, &p->x);
@@ -69,6 +71,76 @@ void line_func_add(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const tw
 	gfp2_add(b, b, b);
 
 	twistpoint_set(rout, &r0);
+
+	/*gfp2_t B;
+	gfp2_mul(&B, &p->x, &r->t);
+
+	gfp2_t D;
+	gfp2_add(&D, &p->y, &r->z);
+	gfp2_square(&D, &D);
+	gfp2_sub(&D, &D, rr2);
+	gfp2_sub(&D, &D, &r->t);
+	gfp2_mul(&D, &D, &r->t);
+
+	gfp2_t H;
+	gfp2_sub(&H, &B, &r->x);
+
+	gfp2_t I;
+	gfp2_square(&I, &H);
+
+	gfp2_t E;
+	gfp2_add(&E, &I, &I);
+	gfp2_add(&E, &E, &E);
+
+	gfp2_t J;
+	gfp2_mul(&J, &H, &E);
+
+	gfp2_t L1;
+	gfp2_sub(&L1, &D, &r->y);
+	gfp2_sub(&L1, &L1, &r->y);
+
+	gfp2_t V;
+	gfp2_mul(&V, &r->x, &E);
+
+	twistpoint_t rOut;
+	gfp2_square(&rOut.x, &L1);
+	gfp2_sub(&rOut.x, &rOut.x, &J);
+	gfp2_sub(&rOut.x, &rOut.x, &V);
+	gfp2_sub(&rOut.x, &rOut.x, &V);
+
+	gfp2_add(&rOut.z, &r->z, &H);
+	gfp2_square(&rOut.z, &rOut.z);
+	gfp2_sub(&rOut.z, &rOut.z, &r->t);
+	gfp2_sub(&rOut.z, &rOut.z, &I);
+
+	gfp2_t t;
+	gfp2_sub(&t, &V, &rOut.x);
+	gfp2_mul(&t, &t, &L1);
+
+	gfp2_t t2;
+	gfp2_mul(&t2, &r->y, &J);
+	gfp2_add(&t2, &t2, &t2);
+	gfp2_sub(&rOut.y, &t, &t2);
+
+	gfp2_square(&rOut.t, &rOut.z);
+
+	gfp2_add(&t, &p->y, &rOut.z);
+	gfp2_square(&t, &t);
+	gfp2_sub(&t, &t, rr2);
+	gfp2_sub(&t, &t, &rOut.t);
+
+	gfp2_mul(&t2, &L1, &p->x);
+	gfp2_add(&t2, &t2, &t2);
+	gfp2_sub(a, &t2, &t);
+
+	gfp2_mulscalar(c, &rOut.z, q->y);
+	gfp2_add(c, c, c);
+
+	gfp2_neg(b, &L1);
+	gfp2_mulscalar(b, b, q->x);
+	gfp2_add(b, b, b);
+
+	twistpoint_set(rout, &rOut);*/
 }
 
 void line_func_double(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const curvepoint_t* q) {
@@ -143,11 +215,12 @@ void mul_line(gfp12_t* ret, const gfp2_t* a, const gfp2_t* b, const gfp2_t* c) {
 	gfp2_set(&t2.z, &t);
 	gfp6_add(&ret->x, &ret->x, &ret->y);
 
-	gfp6_set(&ret->x, &t3);
+	gfp6_set(&ret->y, &t3);
 	
 	gfp6_mul(&ret->x, &ret->x, &t2);
 	gfp6_sub(&ret->x, &ret->x, &a2);
 	gfp6_sub(&ret->x, &ret->x, &ret->y);
+
 	gfp6_multau(&a2, &a2);
 	gfp6_add(&ret->y, &ret->y, &a2);
 }
@@ -164,7 +237,7 @@ static const int dSixPlus2NAF = dim(sixPlus2NAF);
 void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p) {
 	twistpoint_t aAffine, minusA, r, newR;
 	curvepoint_t bAffine;
-	gfp2_t r2, a, b, c;
+	gfp2_t rr2, a, b, c;
 	twistpoint_t q1, minusQ2;
 
 	gfp12_setone(ret);
@@ -174,13 +247,17 @@ void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p) {
 
 	curvepoint_set(&bAffine, p);
 	curvepoint_make_affine(&bAffine);
-
+	
 	twistpoint_neg(&minusA, &aAffine);
 	twistpoint_set(&r, &aAffine);
 
-	gfp2_square(&r2, &aAffine.y);
+	gfp2_square(&rr2, &aAffine.y);
 
 	for (int i = dSixPlus2NAF - 1; i > 0; i--) {
+		gfp2_setzero(&a);
+		gfp2_setzero(&b);
+		gfp2_setzero(&c);
+		twistpoint_zero(&newR);
 		line_func_double(&a, &b, &c, &newR, &r, &bAffine);
 		if (i != dSixPlus2NAF - 1) {
 			gfp12_square(ret, ret);
@@ -189,12 +266,14 @@ void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p) {
 		mul_line(ret, &a, &b, &c);
 		twistpoint_set(&r, &newR);
 
-		switch (sixPlus2NAF[i]) {
+		switch (sixPlus2NAF[i-1]) {
 		case 1:
-			line_func_add(&a, &b, &c, &newR, &r, &aAffine, &bAffine, &r2);
+			twistpoint_zero(&newR);
+			line_func_add(&a, &b, &c, &newR, &r, &aAffine, &bAffine, &rr2);
 			break;
 		case -1:
-			line_func_add(&a, &b, &c, &newR, &r, &minusA, &bAffine, &r2);
+			twistpoint_zero(&newR);
+			line_func_add(&a, &b, &c, &newR, &r, &minusA, &bAffine, &rr2);
 			break;
 		default:
 			continue;
@@ -216,13 +295,21 @@ void miller(gfp12_t* ret, const twistpoint_t* q, const curvepoint_t* p) {
 	gfp2_setone(&minusQ2.z);
 	gfp2_setone(&minusQ2.t);
 
-	gfp2_square(&r2, &q1.y);
-	line_func_add(&a, &b, &c, &newR, &r, &q1, &bAffine, &r2);
+	gfp2_square(&rr2, &q1.y);
+	gfp2_setzero(&a);
+	gfp2_setzero(&b);
+	gfp2_setzero(&c);
+	twistpoint_zero(&newR);
+	line_func_add(&a, &b, &c, &newR, &r, &q1, &bAffine, &rr2);
 	mul_line(ret, &a, &b, &c);
 	twistpoint_set(&r, &newR);
 
-	gfp2_square(&r2, &minusQ2.y);
-	line_func_add(&a, &b, &c, &newR, &r, &minusQ2, &bAffine, &r2);
+	gfp2_square(&rr2, &minusQ2.y);
+	gfp2_setzero(&a);
+	gfp2_setzero(&b);
+	gfp2_setzero(&c);
+	twistpoint_zero(&newR);
+	line_func_add(&a, &b, &c, &newR, &r, &minusQ2, &bAffine, &rr2);
 	mul_line(ret, &a, &b, &c);
 }
 

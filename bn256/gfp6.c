@@ -7,7 +7,7 @@
 void gfp6_set(gfp6_t* c, const gfp6_t* a) {
 	gfp2_set(&c->x, &a->x);
 	gfp2_set(&c->y, &a->y);
-	gfp2_set(&c->z, &c->z);
+	gfp2_set(&c->z, &a->z);
 }
 
 void gfp6_setzero(gfp6_t* c) {
@@ -78,18 +78,21 @@ void gfp6_mul(gfp6_t* c, const gfp6_t* a, const gfp6_t* b) {
 	gfp2_mul(&v1, &a->y, &b->y);
 	gfp2_mul(&v2, &a->x, &b->x);
 
-	gfp2_mul(&t0, &a->x, &a->y);
-	gfp2_mul(&t1, &b->y, &b->y);
+	gfp2_add(&t0, &a->x, &a->y);
+	gfp2_add(&t1, &b->x, &b->y);
 	gfp2_mul(&tz, &t0, &t1);
+
 	gfp2_sub(&tz, &tz, &v1);
 	gfp2_sub(&tz, &tz, &v2);
 	gfp2_mulxi(&tz, &tz);
-	gfp2_add(&tz, &tz, &t0);
+	gfp2_add(&tz, &tz, &v0);
 
 	gfp2_add(&t0, &a->y, &a->z);
 	gfp2_add(&t1, &b->y, &b->z);
 	gfp2_mul(&ty, &t0, &t1);
+
 	gfp2_mulxi(&t0, &v2);
+
 	gfp2_sub(&ty, &ty, &v0);
 	gfp2_sub(&ty, &ty, &v1);
 	gfp2_add(&ty, &ty, &t0);
@@ -97,6 +100,7 @@ void gfp6_mul(gfp6_t* c, const gfp6_t* a, const gfp6_t* b) {
 	gfp2_add(&t0, &a->x, &a->z);
 	gfp2_add(&t1, &b->x, &b->z);
 	gfp2_mul(&tx, &t0, &t1);
+
 	gfp2_sub(&tx, &tx, &v0);
 	gfp2_add(&tx, &tx, &v1);
 	gfp2_sub(&tx, &tx, &v2);
@@ -139,6 +143,7 @@ void gfp6_square(gfp6_t* c, const gfp6_t* a) {
 	gfp2_square(&v2, &a->x);
 
 	gfp2_add(&c0, &a->x, &a->y);
+
 	gfp2_square(&c0, &c0);
 	gfp2_sub(&c0, &c0, &v1);
 	gfp2_sub(&c0, &c0, &v2);
@@ -149,10 +154,12 @@ void gfp6_square(gfp6_t* c, const gfp6_t* a) {
 	gfp2_square(&c1, &c1);
 	gfp2_sub(&c1, &c1, &v0);
 	gfp2_sub(&c1, &c1, &v1);
+
 	gfp2_mulxi(&xiv2, &v2);
 	gfp2_add(&c1, &c1, &xiv2);
 
 	gfp2_add(&c2, &a->x, &a->z);
+
 	gfp2_square(&c2, &c2);
 	gfp2_sub(&c2, &c2, &v0);
 	gfp2_add(&c2, &c2, &v1);

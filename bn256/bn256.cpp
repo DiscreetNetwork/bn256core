@@ -1,6 +1,7 @@
 extern "C" {
 #include "types.h"
 #include "gfp2.h"
+#include "gfp6.h"
 #include "gfp.h"
 #include "gfp12.h"
 #include "BigInt.h"
@@ -39,6 +40,8 @@ EXPORT int ScalarBit(Scalar& k, int i) {
 	return bignum_bit(&k.n, i);
 }
 
+// GFp
+
 EXPORT void GFpMul(gfp_t c, const gfp_t a, const gfp_t b) {
 	gfp_mul(c, a, b);
 }
@@ -71,6 +74,8 @@ EXPORT void GFpSub(gfp_t c, const gfp_t a, const gfp_t b) {
 	gfp_sub(c, a, b);
 }
 
+// GFp2
+
 EXPORT void GFp2Add(gfp2_t* c, const gfp2_t* a, const gfp2_t* b) {
 	gfp2_add(c, a, b);
 }
@@ -90,6 +95,120 @@ EXPORT void GFp2Square(gfp2_t* c, const gfp2_t* a) {
 EXPORT void GFp2Invert(gfp2_t* c, const gfp2_t* a) {
 	gfp2_invert(c, a);
 }
+
+EXPORT void GFp2MulXi(gfp2_t* c, const gfp2_t* a) {
+	gfp2_mulxi(c, a);
+}
+
+// GFp6
+
+EXPORT void GFp6Frobenius(gfp6_t* c, const gfp6_t* a) {
+	gfp6_frobenius(c, a);
+}
+
+EXPORT void GFp6FrobeniusP2(gfp6_t* c, const gfp6_t* a) {
+	gfp6_frobeniusp2(c, a);
+}
+
+EXPORT void GFp6FrobeniusP4(gfp6_t* c, const gfp6_t* a) {
+	gfp6_frobeniusp4(c, a);
+}
+
+EXPORT void GFp6Add(gfp6_t* c, const gfp6_t* a, const gfp6_t* b) {
+	gfp6_add(c, a, b);
+}
+
+EXPORT void GFp6Sub(gfp6_t* c, const gfp6_t* a, const gfp6_t* b) {
+	gfp6_sub(c, a, b);
+}
+
+EXPORT void GFp6Mul(gfp6_t* c, const gfp6_t* a, const gfp6_t* b) {
+	gfp6_mul(c, a, b);
+}
+
+EXPORT void GFp6MulScalar(gfp6_t* c, const gfp6_t* a, const gfp2_t* b) {
+	gfp6_mulscalar(c, a, b);
+}
+
+EXPORT void GFp6MulGFp(gfp6_t* c, const gfp6_t* a, const gfp_t b) {
+	gfp6_mulgfp(c, a, b);
+}
+
+EXPORT void GFp6MulTau(gfp6_t* c, const gfp6_t* a) {
+	gfp6_multau(c, a);
+}
+
+EXPORT void GFp6Square(gfp6_t* c, const gfp6_t* a) {
+	gfp6_square(c, a);
+}
+
+EXPORT void GFp6Invert(gfp6_t* c, const gfp6_t* a) {
+	gfp6_invert(c, a);
+}
+
+EXPORT void GFp12Conjugate(gfp12_t* c, const gfp12_t* a) {
+	gfp12_conjugate(c, a);
+}
+
+EXPORT void GFp12Neg(gfp12_t* c, const gfp12_t* a) {
+	gfp12_neg(c, a);
+}
+
+EXPORT void GFp12Frobenius(gfp12_t* c, const gfp12_t* a) {
+	gfp12_frobenius(c, a);
+}
+
+EXPORT void GFp12FrobeniusP2(gfp12_t* c, const gfp12_t* a) {
+	gfp12_frobeniusp2(c, a);
+}
+
+EXPORT void GFp12FrobeniusP4(gfp12_t* c, const gfp12_t* a) {
+	gfp12_frobeniusp4(c, a);
+}
+
+EXPORT void GFp12Add(gfp12_t* c, const gfp12_t* a, const gfp12_t* b) {
+	gfp12_add(c, a, b);
+}
+
+EXPORT void GFp12Sub(gfp12_t* c, const gfp12_t* a, const gfp12_t* b) {
+	gfp12_sub(c, a, b);
+}
+
+EXPORT void GFp12Mul(gfp12_t* c, const gfp12_t* a, const gfp12_t* b) {
+	gfp12_mul(c, a, b);
+}
+
+EXPORT void GFp12MulScalar(gfp12_t* c, const gfp12_t* a, const gfp6_t* b) {
+	gfp12_mulscalar(c, a, b);
+}
+EXPORT void GFp12Square(gfp12_t* c, const gfp12_t* a) {
+	gfp12_square(c, a);
+}
+
+EXPORT void GFp12Invert(gfp12_t* c, const gfp12_t* a) {
+	gfp12_invert(c, a);
+}
+
+EXPORT void GFp12Exp(gfp12_t* c, const gfp12_t* a, const Scalar& power) {
+	gfp12_exp(c, a, &power.n);
+}
+
+// Pair elements
+
+EXPORT void LineFuncAdd(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* rr2) {
+	line_func_add(a, b, c, rout, r, p, q, rr2);
+}
+
+EXPORT void LineFuncDouble(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const curvepoint_t* q) {
+	line_func_double(a, b, c, rout, r, q);
+}
+
+EXPORT void MulLine(gfp12_t* ret, const gfp2_t* a, const gfp2_t* b, const gfp2_t* c) {
+	mul_line(ret, a, b, c);
+}
+
+
+// G1
 
 EXPORT void RandomG1(G1& g1, Scalar& k) {
 	random_scalar(&k.n);

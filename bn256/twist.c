@@ -165,6 +165,7 @@ void twistpoint_mul(twistpoint_t* c, const twistpoint_t* a, const struct bn* sca
 	twistpoint_t sum, t;
 	//twistpoint_set_infinity(&sum);
 	twistpoint_zero(&sum);
+	twistpoint_zero(&t);
 
 	for (int i = bignum_bitlen(scalar); i >= 0; i--) {
 		twistpoint_double(&t, &sum);

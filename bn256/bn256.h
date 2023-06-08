@@ -76,6 +76,36 @@ EXPORT void GFp2Sub(gfp2_t* c, const gfp2_t* a, const gfp2_t* b);
 EXPORT void GFp2Mul(gfp2_t* c, const gfp2_t* a, const gfp2_t* b);
 EXPORT void GFp2Square(gfp2_t* c, const gfp2_t* a);
 EXPORT void GFp2Invert(gfp2_t* c, const gfp2_t* a);
+EXPORT void GFp2MulXi(gfp2_t* c, const gfp2_t* a);
+
+EXPORT void GFp6Frobenius(gfp6_t* c, const gfp6_t* a);
+EXPORT void GFp6FrobeniusP2(gfp6_t* c, const gfp6_t* a);
+EXPORT void GFp6FrobeniusP4(gfp6_t* c, const gfp6_t* a);
+EXPORT void GFp6Add(gfp6_t* c, const gfp6_t* a, const gfp6_t* b);
+EXPORT void GFp6Sub(gfp6_t* c, const gfp6_t* a, const gfp6_t* b);
+EXPORT void GFp6Mul(gfp6_t* c, const gfp6_t* a, const gfp6_t* b);
+EXPORT void GFp6MulScalar(gfp6_t* c, const gfp6_t* a, const gfp2_t* b);
+EXPORT void GFp6MulGFp(gfp6_t* c, const gfp6_t* a, const gfp_t b);
+EXPORT void GFp6MulTau(gfp6_t* c, const gfp6_t* a);
+EXPORT void GFp6Square(gfp6_t* c, const gfp6_t* a);
+EXPORT void GFp6Invert(gfp6_t* c, const gfp6_t* a);
+
+EXPORT void GFp12Conjugate(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12Neg(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12Frobenius(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12FrobeniusP2(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12FrobeniusP4(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12Add(gfp12_t* c, const gfp12_t* a, const gfp12_t* b);
+EXPORT void GFp12Sub(gfp12_t* c, const gfp12_t* a, const gfp12_t* b);
+EXPORT void GFp12Mul(gfp12_t* c, const gfp12_t* a, const gfp12_t* b);
+EXPORT void GFp12MulScalar(gfp12_t* c, const gfp12_t* a, const gfp6_t* b);
+EXPORT void GFp12Square(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12Invert(gfp12_t* c, const gfp12_t* a);
+EXPORT void GFp12Exp(gfp12_t* c, const gfp12_t* a, const bn256::Scalar& power);
+
+EXPORT void LineFuncAdd(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const twistpoint_t* p, const curvepoint_t* q, const gfp2_t* rr2);
+EXPORT void LineFuncDouble(gfp2_t* a, gfp2_t* b, gfp2_t* c, twistpoint_t* rout, const twistpoint_t* r, const curvepoint_t* q);
+EXPORT void MulLine(gfp12_t* ret, const gfp2_t* a, const gfp2_t* b, const gfp2_t* c);
 
 EXPORT void RandomG1(bn256::G1& g1, bn256::Scalar& k);
 EXPORT bn256::G1 RandomG1_1();
