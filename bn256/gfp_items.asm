@@ -21,7 +21,7 @@ gfpneg:
 	mov rdi, rcx ; rcx stores return value 'c'
 	mov rsi, rdx ; rdx stores parameter value 'a'
 	
-	sub r8,  qword [rsi +  0] ; r8 := r8 - [di]
+	sub r8,  qword [rsi +  0] ; ;r8 := r8 - [di] = pi - ai - carry
 	sbb r9,  qword [rsi +  8]
 	sbb r10, qword [rsi + 16]
 	sbb r11, qword [rsi + 24]
@@ -70,6 +70,13 @@ gfpadd:
 	mov rsi, r8
 	; do not disturb rcx
 
+	; load rdi (a) into r8:r11
+	mov r8,  qword [rdi +  0]
+	mov r9,  qword [rdi +  8]
+	mov r10, qword [rdi + 16]
+	mov r11, qword [rdi + 24]
+
+	; perform add
 	mov r12, 0
 	add r8,  [rsi +  0]
 	adc r9,  [rsi +  8]
@@ -77,7 +84,14 @@ gfpadd:
 	adc r11, [rsi + 24]
 	adc r12, 0
 
-	; carry
+	; clear registers that matter
+	xor r13, r13
+	xor r14, r14
+	xor rdx, rdx
+	xor rax, rax
+	xor rbx, rbx
+
+	; carry (R8,R9,R10,R11,R12, R13,R14,DX,AX,BX)
 	mov r13, r8
 	mov r14, r9
 	mov rdx, r10
@@ -116,6 +130,7 @@ gfpsub:
 	mov rdi, rdx
 	mov rsi, r8
 
+	; load di (a) into r8:r11
 	mov r8,  [rdi +  0]
 	mov r9,  [rdi +  8]
 	mov r10, [rdi + 16]
