@@ -10,15 +10,19 @@ extern "C" {
 #define NONGENERIC
 #if defined(NONGENERIC)
 
+void __cpuidex(int res[4], int arg1, int arg2);
 void gfpneg(gfp_t c, const gfp_t a);
 void gfpadd(gfp_t c, const gfp_t a, const gfp_t b);
 void gfpsub(gfp_t c, const gfp_t a, const gfp_t b);
-void mulbmi2(gfp_t c, const gfp_t a, const gfp_t b);
+void gfpfastmul(gfp_t c, const gfp_t a, const gfp_t b);
+
+int hasbmi2();
+extern int hasBMI2;
 
 #define gfp_neg gfpneg
 #define gfp_add gfpadd
 #define gfp_sub gfpsub
-#define gfp_mul mulbmi2
+#define gfp_mul gfpfastmul
 
 #else
 void gfp_carry(gfp_t a, const uint64_t head);

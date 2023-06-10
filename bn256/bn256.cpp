@@ -28,6 +28,10 @@ static inline void random_scalar(struct bn* k) {
 	bignum_mod(&tmp, &order, k);
 }
 
+EXPORT int CheckBMI2() {
+	return hasBMI2;
+}
+
 EXPORT void TestIfWorks(int* a, int b) {
 	*a = 2 * b;
 }

@@ -120,6 +120,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <LargeAddressAware>false</LargeAddressAware>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,6 +141,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -148,7 +152,6 @@
     <ClInclude Include="curve.h" />
     <ClInclude Include="exc.h" />
     <ClInclude Include="export.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="gfp.h" />
     <ClInclude Include="gfp12.h" />
     <ClInclude Include="gfp2.h" />
@@ -157,7 +160,6 @@
     <ClInclude Include="hash.h" />
     <ClInclude Include="hmacsha256.h" />
     <ClInclude Include="pairing.h" />
-    <ClInclude Include="pch.h" />
     <ClInclude Include="random.h" />
     <ClInclude Include="sha256.h" />
     <ClInclude Include="twist.h" />
@@ -170,6 +172,7 @@
     <ClCompile Include="bn256.cpp" />
     <ClCompile Include="constants.c" />
     <ClCompile Include="curve.c" />
+    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="exc.cpp" />
     <ClCompile Include="gfp.c" />
     <ClCompile Include="gfp12.c" />
