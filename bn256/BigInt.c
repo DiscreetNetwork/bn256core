@@ -20,19 +20,17 @@ There may well be room for performance-optimizations and improvements.
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include <assert.h>
 #include "BigInt.h"
 #include "types.h"
 
 
-
-/* Functions for shifting number in-place. */
-static void _lshift_one_bit(struct bn* a);
-static void _rshift_one_bit(struct bn* a);
-static void _lshift_word(struct bn* a, int nwords);
-static void _rshift_word(struct bn* a, int nwords);
-
-
+#if defined(_MSC_VER)
+#define alloca _alloca
+#else
+#include <alloca.h>
+#endif
 
 /* Public / Exported functions. */
 void bignum_init(struct bn* n)
@@ -48,14 +46,14 @@ void bignum_init(struct bn* n)
 
 void bignum_from_gfp(struct bn* n, const gfp_t a) {
     static const uint64_t mask_lower = 0xffffffff;
-    n->array[0] = (DTYPE)(mask_lower & a[0]);
-    n->array[1] = (DTYPE)(a[0] >> 32);
-    n->array[2] = (DTYPE)(mask_lower & a[1]);
-    n->array[3] = (DTYPE)(a[1] >> 32);
-    n->array[4] = (DTYPE)(mask_lower & a[2]);
-    n->array[5] = (DTYPE)(a[2] >> 32);
-    n->array[6] = (DTYPE)(mask_lower & a[3]);
-    n->array[7] = (DTYPE)(a[3] >> 32);
+    n->array[0] = (BigInt_t)(mask_lower & a[0]);
+    n->array[1] = (BigInt_t)(a[0] >> 32);
+    n->array[2] = (BigInt_t)(mask_lower & a[1]);
+    n->array[3] = (BigInt_t)(a[1] >> 32);
+    n->array[4] = (BigInt_t)(mask_lower & a[2]);
+    n->array[5] = (BigInt_t)(a[2] >> 32);
+    n->array[6] = (BigInt_t)(mask_lower & a[3]);
+    n->array[7] = (BigInt_t)(a[3] >> 32);
     for (int i = 8; i < BN_ARRAY_SIZE; i++) {
         n->array[i] = 0;
     }
@@ -104,7 +102,7 @@ int bignum_bitlen(struct bn* n) {
         top |= top >> 8;
         top |= top >> 16;
         top |= (top >> 16) >> 16;
-        return i * WORD_SIZE * 8 + bitslen(top);
+        return i * BigIntWordSize * 8 + bitslen(top);
     }
 
     return 0;
@@ -113,444 +111,589 @@ int bignum_bitlen(struct bn* n) {
 int bignum_bit(struct bn* n, int i) {
     require(i >= 0, "negative bit check");
 
-    int j = i / (WORD_SIZE * 8);
+    int j = i / (BigIntWordSize * 8);
     if (j >= bignum_wordlen(n)) return 0;
-    uint32_t shift = (uint32_t)i % (WORD_SIZE * 8);
+    uint32_t shift = (uint32_t)i % (BigIntWordSize * 8);
 
     return (int)((n->array[j] >> shift) & 1);
 }
 
+/* Printing format strings */
+#ifndef BigIntWordSize
+#error Must define BigIntWordSize to be 1, 2, 4
+#elif (BigIntWordSize == 1)
+    /* Max value of integer type */
+#define MAX_VAL ((BigInt_tmp_t)0xFF)
+#elif (BigIntWordSize == 2)
+#define MAX_VAL ((BigInt_tmp_t)0xFFFF)
+#elif (BigIntWordSize == 4)
+#define MAX_VAL ((BigInt_tmp_t)0xFFFFFFFF)
+#elif (BigIntWordSize == 8)
+#define MAX_VAL ((BigInt_tmp_t)0xFFFFFFFFFFFFFFFF)
+#endif
 
-void bignum_from_int(struct bn* n, DTYPE_TMP i)
+/* Bad macros */
+#define MIN(A,B) (((A)<(B))?(A):(B))
+#define MAX(A,B) (((A)>(B))?(A):(B))
+
+/* Functions for shifting number in-place. */
+static void _lshift_one_bit(size_t NumWords, BigInt_t* A);
+static void _rshift_one_bit(size_t NumWords, BigInt_t* A);
+static void _lshift_word(size_t NumWords, BigInt_t* A, int nwords);
+static void _rshift_word(size_t NumWords, BigInt_t* A, int nwords);
+
+/* Endianness issue if machine is not little-endian? */
+#ifdef BigIntWordSize
+#if (BigIntWordSize == 1)
+#define BigInt_FROM_INT(BigInt, Integer) { \
+    ((BigInt_t *)(void *)BigInt)[0] = (((BigInt_tmp_t)Integer) & 0x000000ff); \
+    ((BigInt_t *)(void *)BigInt)[1] = (((BigInt_tmp_t)Integer) & 0x0000ff00) >> 8; \
+    ((BigInt_t *)(void *)BigInt)[2] = (((BigInt_tmp_t)Integer) & 0x00ff0000) >> 16; \
+    ((BigInt_t *)(void *)BigInt)[3] = (((BigInt_tmp_t)Integer) & 0xff000000) >> 24; \
+}
+#elif (BigIntWordSize == 2)
+#define BigInt_FROM_INT(BigInt, Integer) { \
+    ((BigInt_t *)(void *)BigInt)[0] = (((BigInt_tmp_t)Integer) & 0x0000ffff); \
+    ((BigInt_t *)(void *)BigInt)[1] = (((BigInt_tmp_t)Integer) & 0xffff0000) >> 16; \
+}
+#elif (BigIntWordSize == 4)
+#define BigInt_FROM_INT(BigInt, Integer) { \
+    ((BigInt_t *)(void *)BigInt)[0] = ((BigInt_tmp_t)Integer); \
+    ((BigInt_t *)(void *)BigInt)[1] = ((BigInt_tmp_t)Integer) >> ((BigInt_tmp_t)32); \
+}
+#elif (BigIntWordSize == 8)
+#define BigInt_FROM_INT(BigInt, Integer) { \
+    ((BigInt_t *)(void *)BigInt)[0] = ((BigInt_tmp_t)Integer); \
+    ((BigInt_t *)(void *)BigInt)[1] = ((BigInt_tmp_t)Integer) >> ((BigInt_tmp_t)64); \
+}
+#endif
+#endif
+
+/* Public / Exported functions. */
+void BigInt_zero(size_t NumWords, BigInt_t* BigInt)
 {
-    require(n, "n is null");
-
-    bignum_init(n);
-
-    /* Endianness issue if machine is not little-endian? */
-#ifdef WORD_SIZE
-#if (WORD_SIZE == 1)
-    n->array[0] = (i & 0x000000ff);
-    n->array[1] = (i & 0x0000ff00) >> 8;
-    n->array[2] = (i & 0x00ff0000) >> 16;
-    n->array[3] = (i & 0xff000000) >> 24;
-#elif (WORD_SIZE == 2)
-    n->array[0] = (i & 0x0000ffff);
-    n->array[1] = (i & 0xffff0000) >> 16;
-#elif (WORD_SIZE == 4)
-    n->array[0] = (uint32_t)i;
-    DTYPE_TMP num_32 = 32;
-    DTYPE_TMP tmp = i >> num_32; /* bit-shift with U64 operands to force 64-bit results */
-    n->array[1] = (uint32_t)tmp;
-#endif
-#endif
+    for (size_t i = 0; i < NumWords; ++i) {
+        BigInt[i] = 0;
+    }
 }
 
-
-int bignum_to_int(struct bn* n)
+void BigInt_from_int(size_t NumWords, BigInt_t* BigInt, BigInt_tmp_t Integer)
 {
-    require(n, "n is null");
+    BigInt_zero(NumWords, BigInt);
+    BigInt_FROM_INT(BigInt, Integer);
+}
 
+int BigInt_to_int(size_t NumWords, BigInt_t* BigInt)
+{
     int ret = 0;
 
     /* Endianness issue if machine is not little-endian? */
-#if (WORD_SIZE == 1)
-    ret += n->array[0];
-    ret += n->array[1] << 8;
-    ret += n->array[2] << 16;
-    ret += n->array[3] << 24;
-#elif (WORD_SIZE == 2)
-    ret += n->array[0];
-    ret += n->array[1] << 16;
-#elif (WORD_SIZE == 4)
-    ret += n->array[0];
+#if (BigIntWordSize == 1)
+    ret += BigInt[0];
+    ret += BigInt[1] << 8;
+    ret += BigInt[2] << 16;
+    ret += BigInt[3] << 24;
+#elif (BigIntWordSize == 2)
+    ret += BigInt[0];
+    ret += BigInt[1] << 16;
+#elif (BigIntWordSize == 4)
+    ret += BigInt[0];
+#elif (BigIntWordSize == 8)
+    ret += BigInt[0];
 #endif
 
     return ret;
 }
 
-
-void bignum_from_string(struct bn* n, char* str, int nbytes)
+size_t BigInt_truncate(size_t NumWords, BigInt_t* BigInt)
 {
-    require(n, "n is null");
-    require(str, "str is null");
-    require(nbytes > 0, "nbytes must be positive");
-    require((nbytes & 1) == 0, "string format must be in hex -> equal number of bytes");
-    require((nbytes % (sizeof(DTYPE) * 2)) == 0, "string length must be a multiple of (sizeof(DTYPE) * 2) characters");
+    --NumWords;
+    while (BigInt[NumWords] == 0 && NumWords > 0) --NumWords;
+    return ++NumWords;
+}
 
-    bignum_init(n);
+void BigInt_from_string(size_t NumWords, BigInt_t* BigInt, char* str)
+{
+    BigInt_zero(NumWords, BigInt);
 
-    DTYPE tmp;                        /* DTYPE is defined in bn.h - uint{8,16,32,64}_t */
-    int i = nbytes - (2 * WORD_SIZE); /* index into string */
-    int j = 0;                        /* index into array */
+    BigInt_t* temp = alloca(NumWords * BigIntWordSize);
+    BigInt_t digit;
+    BigInt_t ten = 10;
 
-    /* reading last hex-byte "MSB" from string first -> big endian */
-    /* MSB ~= most significant byte / block ? :) */
-    while (i >= 0)
+    while (*str != 0)
     {
-        tmp = 0;
-        sscanf_s(&str[i], SSCANF_FORMAT_STR, &tmp);
-        n->array[j] = tmp;
-        i -= (2 * WORD_SIZE); /* step WORD_SIZE hex-byte(s) back in the string. */
-        j += 1;               /* step one element forward in the array. */
+        BigInt_mul(NumWords, BigInt, 1, &ten, NumWords, temp);
+
+        digit = (*(str++) - '0');
+
+        if (digit != 0)
+            BigInt_add(NumWords, temp, 1, &digit, NumWords, BigInt);
+        else
+            BigInt_copy(NumWords, BigInt, temp);
     }
 }
 
-
-void bignum_to_string(struct bn* n, char* str, int nbytes)
+static BigInt_t hex_to_word(char* Text, int Length)
 {
-    require(n, "n is null");
-    require(str, "str is null");
-    require(nbytes > 0, "nbytes must be positive");
-    require((nbytes & 1) == 0, "string format must be in hex -> equal number of bytes");
-
-    int j = BN_ARRAY_SIZE - 1; /* index into array - reading "MSB" first -> big-endian */
-    int i = 0;                 /* index into string representation. */
-
-    /* reading last array-element "MSB" first -> big endian */
-    while ((j >= 0) && (nbytes > (i + 1)))
+    BigInt_t word = 0;
+    for (int i = 0; i < Length; ++i)
     {
-        sprintf_s(&str[i], SPRINTF_FORMAT_STR, n->array[j]);
-        i += (2 * WORD_SIZE); /* step WORD_SIZE hex-byte(s) forward in the string. */
-        j -= 1;               /* step one element back in the array. */
+        char character = Text[i];
+        word <<= 4;
+        if (character >= '0' && character <= '9')
+            word += character - '0';
+        else if (character <= 'F' && character >= 'A')
+            word += character - 'A' + 10;
+        else if (character <= 'f' && character >= 'a')
+            word += character - 'a' + 10;
     }
-
-    /* Count leading zeros: */
-    j = 0;
-    while (str[j] == '0')
-    {
-        j += 1;
-    }
-
-    /* Move string j places ahead, effectively skipping leading zeros */
-    for (i = 0; i < (nbytes - j); ++i)
-    {
-        str[i] = str[i + j];
-    }
-
-    /* Zero-terminate string */
-    str[i] = 0;
+    return word;
 }
 
-
-void bignum_dec(struct bn* n)
+void BigInt_from_hex_string(size_t NumWords, BigInt_t* BigInt, char* Str)
 {
-    require(n, "n is null");
+    BigInt_zero(NumWords, BigInt);
+    size_t length = strlen(Str);
 
-    DTYPE tmp; /* copy of n */
-    DTYPE res;
+    /* whole Words in this string */
+    size_t num_words = length / (BigIntWordSize * 2);
+    if (num_words * (BigIntWordSize * 2) < length) ++num_words; /* round up */
 
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
+    char* string_word = Str + length;
+
+    for (size_t i = 0; i < num_words; ++i)
     {
-        tmp = n->array[i];
+        /* How many characters should be read from the string */
+        size_t hex_length = MIN(BigIntWordSize * 2, string_word - Str);
+        string_word -= (BigIntWordSize * 2);
+        BigInt[i] = hex_to_word(string_word, hex_length);
+    }
+}
+
+void BigInt_to_hex_string(size_t NumWords, BigInt_t* BigInt, char* Str)
+{
+    NumWords = BigInt_truncate(NumWords, BigInt);
+
+    size_t str_index = 0;
+
+    for (int_fast32_t d = NumWords - 1; d >= 0; --d)
+    {
+        BigInt_t word = BigInt[d];
+        for (int BigInt = 0; BigInt < BigIntWordSize * 2; ++BigInt) {
+            uint8_t nibble = (word >> (BigInt_t)(BigInt * 4)) & 0x0F;
+            char hexchar = (nibble <= 9) ? '0' + nibble : 'a' + nibble - 10;
+            Str[str_index + BigIntWordSize * 2 - 1 - BigInt] = hexchar;
+        }
+        str_index += BigIntWordSize * 2;
+    }
+
+    Str[str_index] = 0;
+}
+
+void BigInt_dec(size_t NumWords, BigInt_t* BigInt)
+{
+    BigInt_t tmp; /* copy of BigInt */
+    BigInt_t res;
+
+    for (size_t i = 0; i < NumWords; ++i) {
+        tmp = BigInt[i];
         res = tmp - 1;
-        n->array[i] = res;
+        BigInt[i] = res;
 
-        if (!(res > tmp))
-        {
+        if (!(res > tmp)) {
             break;
         }
     }
 }
 
-
-void bignum_inc(struct bn* n)
+void BigInt_inc(size_t NumWords, BigInt_t* BigInt)
 {
-    require(n, "n is null");
+    BigInt_t res;
+    BigInt_tmp_t tmp; /* copy of BigInt */
 
-    DTYPE res;
-    DTYPE_TMP tmp; /* copy of n */
+    for (size_t i = 0; i < NumWords; ++i) {
+        tmp = BigInt[i];
+        res = tmp + 1;
+        BigInt[i] = res;
 
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
+        if (res > tmp) {
+            break;
+        }
+    }
+}
+
+void BigInt_add(size_t AWords, BigInt_t* A, size_t BWords, BigInt_t* B, size_t Out_NumWords, BigInt_t* Out)
+{
+    /* Make it so that A will be smaller than B */
+    if (AWords > BWords)
     {
-        tmp = n->array[i];
-        res = (uint32_t)tmp + 1;
-        n->array[i] = res;
-
-        if (res > tmp)
-        {
-            break;
-        }
+        size_t temp1 = BWords;
+        BWords = AWords;
+        AWords = temp1;
+        BigInt_t* temp2 = B;
+        B = A;
+        A = temp2;
     }
-}
 
+    int loop_to = 0;
+    size_t loop1 = 0;
+    size_t loop2 = 0;
+    size_t loop3 = 0;
 
-void bignum_add(struct bn* a, struct bn* b, struct bn* c)
-{
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    if (Out_NumWords <= AWords) {
+        loop_to = 1;
+        loop1 = Out_NumWords;
+    }
+    else if (Out_NumWords <= BWords) {
+        loop_to = 2;
+        loop1 = AWords;
+        loop2 = Out_NumWords;
+    }
+    else {
+        loop_to = 3;
+        loop1 = AWords;
+        loop2 = BWords;
+        loop3 = Out_NumWords;
+    }
 
-    DTYPE_TMP tmp;
     int carry = 0;
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
+    BigInt_tmp_t tmp;
+    size_t i;
+
+    for (i = 0; i < loop1; ++i)
     {
-        tmp = (DTYPE_TMP)a->array[i] + b->array[i] + carry;
+        tmp = (BigInt_tmp_t)A[i] + B[i] + carry;
         carry = (tmp > MAX_VAL);
-        c->array[i] = (tmp & MAX_VAL);
+        Out[i] = (tmp & MAX_VAL);
     }
+
+    if (loop_to == 1) return;
+
+    for (; i < loop2; ++i)
+    {
+        tmp = (BigInt_tmp_t)B[i] + 0 + carry;
+        carry = (tmp > MAX_VAL);
+        Out[i] = (tmp & MAX_VAL);
+    }
+
+    if (loop_to == 2) return;
+
+    /* Do the carry, then fill the rest with zeros */
+    Out[i++] = carry;
+    for (; i < loop3; ++i) Out[i] = 0;
 }
 
-
-void bignum_sub(struct bn* a, struct bn* b, struct bn* c)
+void BigInt_sub(size_t AWords, BigInt_t* A, size_t BWords, BigInt_t* B, size_t Out_NumWords, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    int loop_to = 0;
+    size_t loop1 = 0;
+    size_t loop2 = 0;
+    size_t loop3 = 0;
 
-    DTYPE_TMP res;
-    DTYPE_TMP tmp1;
-    DTYPE_TMP tmp2;
-    int borrow = 0;
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
+    if (Out_NumWords <= MIN(AWords, BWords))
     {
-        tmp1 = (DTYPE_TMP)a->array[i] + (MAX_VAL + 1); /* + number_base */
-        tmp2 = (DTYPE_TMP)b->array[i] + borrow;;
+        loop_to = 1;
+        loop1 = MIN(AWords, BWords);
+    }
+    else if (Out_NumWords <= MAX(AWords, BWords))
+    {
+        loop_to = 2;
+        loop1 = MIN(AWords, BWords);
+        loop2 = Out_NumWords;
+    }
+    else {
+        loop_to = 3;
+        loop1 = AWords;
+        loop2 = BWords;
+        loop3 = Out_NumWords;
+    }
+
+    BigInt_tmp_t res;
+    BigInt_tmp_t tmp1;
+    BigInt_tmp_t tmp2;
+    int borrow = 0;
+    size_t i;
+
+    for (i = 0; i < loop1; ++i) {
+        tmp1 = (BigInt_tmp_t)A[i] + (MAX_VAL + 1); /* + number_base */
+        tmp2 = (BigInt_tmp_t)B[i] + borrow;
+        ;
         res = (tmp1 - tmp2);
-        c->array[i] = (DTYPE)(res & MAX_VAL); /* "modulo number_base" == "% (number_base - 1)" if number_base is 2^N */
+        Out[i] = (BigInt_t)(res & MAX_VAL); /* "modulo number_base" == "%
+            (number_base - 1)" if number_base is 2^N */
+        borrow = (res <= MAX_VAL);
+    }
+
+    if (loop_to == 1) return;
+
+    if (AWords > BWords)
+    {
+        for (; i < loop2; ++i) {
+            tmp1 = (BigInt_tmp_t)A[i] + (MAX_VAL + 1);
+            tmp2 = borrow;
+            res = (tmp1 - tmp2);
+            Out[i] = (BigInt_t)(res & MAX_VAL);
+            borrow = (res <= MAX_VAL);
+        }
+    }
+    else
+    {
+        for (; i < loop2; ++i) {
+            tmp1 = (BigInt_tmp_t)MAX_VAL + 1;
+            tmp2 = (BigInt_tmp_t)B[i] + borrow;
+            res = (tmp1 - tmp2);
+            Out[i] = (BigInt_t)(res & MAX_VAL);
+            borrow = (res <= MAX_VAL);
+        }
+    }
+
+    if (loop_to == 2) return;
+
+    for (; i < loop3; ++i) {
+        tmp1 = (BigInt_tmp_t)0 + (MAX_VAL + 1);
+        tmp2 = (BigInt_tmp_t)0 + borrow;
+        res = (tmp1 - tmp2);
+        Out[i] = (BigInt_t)(res & MAX_VAL);
         borrow = (res <= MAX_VAL);
     }
 }
 
-
-void bignum_mul(struct bn* a, struct bn* b, struct bn* c)
+void BigInt_mul_basic(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    BigInt_t* row = alloca(NumWords * BigIntWordSize);
+    BigInt_t* tmp = alloca(NumWords * BigIntWordSize);
+    size_t i, j;
 
-    struct bn row;
-    struct bn tmp;
-    int i, j;
+    BigInt_zero(NumWords, Out);
 
-    bignum_init(c);
+    for (i = 0; i < NumWords; ++i) {
+        BigInt_zero(NumWords, row);
 
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        bignum_init(&row);
-
-        for (j = 0; j < BN_ARRAY_SIZE; ++j)
-        {
-            if (i + j < BN_ARRAY_SIZE)
-            {
-                bignum_init(&tmp);
-                DTYPE_TMP intermediate = ((DTYPE_TMP)a->array[i] * (DTYPE_TMP)b->array[j]);
-                bignum_from_int(&tmp, intermediate);
-                _lshift_word(&tmp, i + j);
-                bignum_add(&tmp, &row, &row);
+        for (j = 0; j < NumWords; ++j) {
+            if (i + j < NumWords) {
+                BigInt_zero(NumWords, tmp);
+                BigInt_tmp_t intermediate = ((BigInt_tmp_t)A[i] * (BigInt_tmp_t)B[j]);
+                BigInt_from_int(NumWords, tmp, intermediate);
+                _lshift_word(NumWords, tmp, i + j);
+                BigInt_add(NumWords, tmp, NumWords, row, NumWords, row);
             }
         }
-        bignum_add(c, &row, c);
+        BigInt_add(NumWords, Out, NumWords, row, NumWords, Out);
     }
 }
 
-
-void bignum_div(struct bn* a, struct bn* b, struct bn* c)
+/* Cool USSR algorithm for fast multiplication (THERE IS NOT A SINGLE 100% CORRECT PSEUDO CODE ONLINE) */
+static void BigInt_Karatsuba_internal(size_t num1_NumWords, BigInt_t* num1, size_t num2_NumWords, BigInt_t* num2, size_t Out_NumWords, BigInt_t* Out, int rlevel) /* Out should be XWords + YWords in size to always avoid overflow */
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    /* Optimise the size, to avoid any waste any resources */
+    num1_NumWords = BigInt_truncate(num1_NumWords, num1);
+    num2_NumWords = BigInt_truncate(num2_NumWords, num2);
 
-    struct bn current;
-    struct bn denom;
-    struct bn tmp;
-
-    bignum_from_int(&current, 1);               // int current = 1;
-    bignum_assign(&denom, b);                   // denom = b
-    bignum_assign(&tmp, a);                     // tmp   = a
-
-    const DTYPE_TMP half_max = 1 + (DTYPE_TMP)(MAX_VAL / 2);
-    bool overflow = false;
-    while (bignum_cmp(&denom, a) != LARGER)     // while (denom <= a) {
+    if (num1_NumWords == 0 || num2_NumWords == 0)
     {
-        if (denom.array[BN_ARRAY_SIZE - 1] >= half_max)
-        {
-            overflow = true;
+        BigInt_zero(Out_NumWords, Out);
+        return;
+    }
+    if (num1_NumWords == 1 && num2_NumWords == 1)
+    {
+        BigInt_tmp_t result = ((BigInt_tmp_t)(*num1)) * ((BigInt_tmp_t)(*num2));
+        if (Out_NumWords == 2) { BigInt_FROM_INT(Out, result); }
+        else BigInt_from_int(Out_NumWords, Out, result);
+        return;
+    }
+
+    size_t m = MIN(num2_NumWords, num1_NumWords);
+    size_t m2 = m / 2;
+    /* do A round up, this is what stops infinite recursion when the inputs are size 1 and 2 */
+    if ((m % 2) == 1) ++m2;
+
+    /* low 1 */
+    size_t low1_NumWords = m2;
+    BigInt_t* low1 = num1;
+    /* high 1 */
+    size_t high1_NumWords = num1_NumWords - m2;
+    BigInt_t* high1 = num1 + m2;
+    /* low 2 */
+    size_t low2_NumWords = m2;
+    BigInt_t* low2 = num2;
+    /* high 2 */
+    size_t high2_NumWords = num2_NumWords - m2;
+    BigInt_t* high2 = num2 + m2;
+
+    // z0 = karatsuba(low1, low2)
+    // z1 = karatsuba((low1 + high1), (low2 + high2))
+    // z2 = karatsuba(high1, high2)
+    size_t z0_NumWords = low1_NumWords + low2_NumWords;
+    BigInt_t* z0 = alloca(z0_NumWords * BigIntWordSize);
+    size_t z1_NumWords = (MAX(low1_NumWords, high1_NumWords) + 1) + (MAX(low2_NumWords, high2_NumWords) + 1);
+    BigInt_t* z1 = alloca(z1_NumWords * BigIntWordSize);
+    size_t z2_NumWords = high1_NumWords + high2_NumWords;
+    int use_out_as_z2 = (Out_NumWords >= z2_NumWords); /* Sometimes we can use Out to store z2, then we don't have to copy from z2 to out later (2X SPEEDUP!) */
+    if (use_out_as_z2) { BigInt_zero(Out_NumWords - (z2_NumWords), Out + z2_NumWords); }/* The remaining part of Out must be ZERO'D */
+    BigInt_t* z2 = (use_out_as_z2) ? Out : alloca(z2_NumWords * BigIntWordSize);
+
+    /* Make z0 and z2 */
+    BigInt_Karatsuba_internal(low1_NumWords, low1, low2_NumWords, low2, z0_NumWords, z0, rlevel + 1);
+    BigInt_Karatsuba_internal(high1_NumWords, high1, high2_NumWords, high2, z2_NumWords, z2, rlevel + 1);
+
+    /* make z1 */
+    {
+        size_t low1high1_NumWords = MAX(low1_NumWords, high1_NumWords) + 1;
+        size_t low2high2_NumWords = MAX(low2_NumWords, high2_NumWords) + 1;
+        BigInt_t* low1high1 = alloca(low1high1_NumWords * BigIntWordSize);
+        BigInt_t* low2high2 = alloca(low2high2_NumWords * BigIntWordSize);
+        BigInt_add(low1_NumWords, low1, high1_NumWords, high1, low1high1_NumWords, low1high1);
+        BigInt_add(low2_NumWords, low2, high2_NumWords, high2, low2high2_NumWords, low2high2);
+        BigInt_Karatsuba_internal(low1high1_NumWords, low1high1, low2high2_NumWords, low2high2, z1_NumWords, z1, rlevel + 1);
+    }
+
+    // return (z2 * 10 ^ (m2 * 2)) + ((z1 - z2 - z0) * 10 ^ m2) + z0
+    BigInt_sub(z1_NumWords, z1, z2_NumWords, z2, z1_NumWords, z1);
+    BigInt_sub(z1_NumWords, z1, z0_NumWords, z0, z1_NumWords, z1);
+    if (!use_out_as_z2) BigInt_copy_dif(Out_NumWords, Out, z2_NumWords, z2);
+    _lshift_word(Out_NumWords, Out, m2);
+    BigInt_add(z1_NumWords, z1, Out_NumWords, Out, Out_NumWords, Out);
+    _lshift_word(Out_NumWords, Out, m2);
+    BigInt_add(Out_NumWords, Out, z0_NumWords, z0, Out_NumWords, Out);
+}
+
+void BigInt_mul(size_t ANumWords, BigInt_t* A, size_t BNumWords, BigInt_t* B, size_t OutNumWords, BigInt_t* Out)
+{
+    BigInt_Karatsuba_internal(ANumWords, A, BNumWords, B, OutNumWords, Out, 0);
+}
+
+void BigInt_div(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
+{
+    BigInt_t* current = alloca(NumWords * BigIntWordSize);
+    BigInt_t* denom = alloca(NumWords * BigIntWordSize);
+    BigInt_t* tmp = alloca(NumWords * BigIntWordSize);
+
+    BigInt_from_int(NumWords, current, 1); // int current = 1;
+    BigInt_copy(NumWords, denom, B); // denom = B
+    BigInt_copy(NumWords, tmp, A); // tmp   = A
+
+    const BigInt_tmp_t half_max = 1 + (BigInt_tmp_t)(MAX_VAL / 2);
+    int overflow = 0;
+    while (BigInt_cmp(NumWords, denom, A) != LARGER) // while (denom <= A) {
+    {
+        if (denom[NumWords - 1] >= half_max) {
+            overflow = 1;
             break;
         }
-        _lshift_one_bit(&current);                //   current <<= 1;
-        _lshift_one_bit(&denom);                  //   denom <<= 1;
+        _lshift_one_bit(NumWords, current); //   current <<= 1;
+        _lshift_one_bit(NumWords, denom); //   denom <<= 1;
     }
-    if (!overflow)
-    {
-        _rshift_one_bit(&denom);                  // denom >>= 1;
-        _rshift_one_bit(&current);                // current >>= 1;
+    if (!overflow) {
+        _rshift_one_bit(NumWords, denom); // denom >>= 1;
+        _rshift_one_bit(NumWords, current); // current >>= 1;
     }
-    bignum_init(c);                             // int answer = 0;
+    BigInt_zero(NumWords, Out); // int answer = 0;
 
-    while (!bignum_is_zero(&current))           // while (current != 0)
+    while (!BigInt_is_zero(NumWords, current)) // while (current != 0)
     {
-        if (bignum_cmp(&tmp, &denom) != SMALLER)  //   if (dividend >= denom)
+        if (BigInt_cmp(NumWords, tmp, denom) != SMALLER) //   if (dividend >= denom)
         {
-            bignum_sub(&tmp, &denom, &tmp);         //     dividend -= denom;
-            bignum_or(c, &current, c);              //     answer |= current;
+            BigInt_sub(NumWords, tmp, NumWords, denom, NumWords, tmp); //     dividend -= denom;
+            BigInt_or(NumWords, Out, current, Out); //     answer |= current;
         }
-        _rshift_one_bit(&current);                //   current >>= 1;
-        _rshift_one_bit(&denom);                  //   denom >>= 1;
-    }                                           // return answer;
+        _rshift_one_bit(NumWords, current); //   current >>= 1;
+        _rshift_one_bit(NumWords, denom); //   denom >>= 1;
+    }
 }
 
-
-void bignum_lshift(struct bn* a, struct bn* b, int nbits)
+void BigInt_lshift(size_t NumWords, BigInt_t* B, int nbits)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(nbits >= 0, "no negative shifts");
-
-    bignum_assign(b, a);
     /* Handle shift in multiples of word-size */
-    const int nbits_pr_word = (WORD_SIZE * 8);
+    const int nbits_pr_word = (BigIntWordSize * 8);
     int nwords = nbits / nbits_pr_word;
-    if (nwords != 0)
-    {
-        _lshift_word(b, nwords);
+    if (nwords != 0) {
+        _lshift_word(NumWords, B, nwords);
         nbits -= (nwords * nbits_pr_word);
     }
 
-    if (nbits != 0)
-    {
-        int i;
-        for (i = (BN_ARRAY_SIZE - 1); i > 0; --i)
-        {
-            b->array[i] = (b->array[i] << nbits) | (b->array[i - 1] >> ((8 * WORD_SIZE) - nbits));
+    if (nbits != 0) {
+        size_t i;
+        for (i = (NumWords - 1); i > 0; --i) {
+            B[i] = (B[i] << nbits) | (B[i - 1] >> ((8 * BigIntWordSize) - nbits));
         }
-        b->array[i] <<= nbits;
+        B[i] <<= nbits;
     }
 }
 
-
-void bignum_rshift(struct bn* a, struct bn* b, int nbits)
+void BigInt_rshift(size_t NumWords, BigInt_t* B, int nbits)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(nbits >= 0, "no negative shifts");
-
-    bignum_assign(b, a);
     /* Handle shift in multiples of word-size */
-    const int nbits_pr_word = (WORD_SIZE * 8);
+    const int nbits_pr_word = (BigIntWordSize * 8);
     int nwords = nbits / nbits_pr_word;
-    if (nwords != 0)
-    {
-        _rshift_word(b, nwords);
+    if (nwords != 0) {
+        _rshift_word(NumWords, B, nwords);
         nbits -= (nwords * nbits_pr_word);
     }
 
-    if (nbits != 0)
-    {
-        int i;
-        for (i = 0; i < (BN_ARRAY_SIZE - 1); ++i)
-        {
-            b->array[i] = (b->array[i] >> nbits) | (b->array[i + 1] << ((8 * WORD_SIZE) - nbits));
+    if (nbits != 0) {
+        size_t i;
+        for (i = 0; i < (NumWords - 1); ++i) {
+            B[i] = (B[i] >> nbits) | (B[i + 1] << ((8 * BigIntWordSize) - nbits));
         }
-        b->array[i] >>= nbits;
-    }
-
-}
-
-
-void bignum_mod(const struct bn* a, const struct bn* b, struct bn* c)
-{
-    /*
-      Take divmod and throw away div part
-    */
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
-
-    struct bn tmp;
-
-    bignum_divmod(a, b, &tmp, c);
-}
-
-void bignum_divmod(const struct bn* a, const struct bn* b, struct bn* c, struct bn* d)
-{
-    /*
-      Puts a%b in d
-      and a/b in c
-
-      mod(a,b) = a - ((a / b) * b)
-
-      example:
-        mod(8, 3) = 8 - ((8 / 3) * 3) = 2
-    */
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
-
-    struct bn tmp;
-
-    /* c = (a / b) */
-    bignum_div(a, b, c);
-
-    /* tmp = (c * b) */
-    bignum_mul(c, b, &tmp);
-
-    /* c = a - tmp */
-    bignum_sub(a, &tmp, d);
-}
-
-
-void bignum_and(struct bn* a, struct bn* b, struct bn* c)
-{
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
-
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        c->array[i] = (a->array[i] & b->array[i]);
+        B[i] >>= nbits;
     }
 }
 
+void bignum_mod(const struct bn* a, const struct bn* b, struct bn* c) {
+    BigInt_mod(BN_ARRAY_SIZE, a->array, b->array, c->array);
+}
 
-void bignum_or(struct bn* a, struct bn* b, struct bn* c)
+void BigInt_mod(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    /* Take divmod and throw away div part */
+    BigInt_t* tmp = alloca(NumWords * BigIntWordSize);
+    BigInt_divmod(NumWords, A, B, tmp, Out);
+}
 
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        c->array[i] = (a->array[i] | b->array[i]);
+void BigInt_divmod(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* C, BigInt_t* D)
+{
+    BigInt_t* tmp = alloca(NumWords * BigIntWordSize);
+
+    /* Out = (A / B) */
+    BigInt_div(NumWords, A, B, C);
+
+    /* tmp = (Out * B) */
+    BigInt_mul(NumWords, C, NumWords, B, NumWords, tmp);
+
+    /* Out = A - tmp */
+    BigInt_sub(NumWords, A, NumWords, tmp, NumWords, D);
+}
+
+void BigInt_and(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
+{
+    for (size_t i = 0; i < NumWords; ++i) {
+        Out[i] = (A[i] & B[i]);
     }
 }
 
-
-void bignum_xor(struct bn* a, struct bn* b, struct bn* c)
+void BigInt_or(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
-
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        c->array[i] = (a->array[i] ^ b->array[i]);
+    for (size_t i = 0; i < NumWords; ++i) {
+        Out[i] = (A[i] | B[i]);
     }
 }
 
-
-int bignum_cmp(struct bn* a, struct bn* b)
+void BigInt_xor(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
+    for (size_t i = 0; i < NumWords; ++i) {
+        Out[i] = (A[i] ^ B[i]);
+    }
+}
 
-    int i = BN_ARRAY_SIZE;
-    do
-    {
+int BigInt_cmp(size_t NumWords, BigInt_t* A, BigInt_t* B)
+{
+    size_t i = NumWords;
+    do {
         i -= 1; /* Decrement first, to start with last array element */
-        if (a->array[i] > b->array[i])
-        {
+        if (A[i] > B[i]) {
             return LARGER;
         }
-        else if (a->array[i] < b->array[i])
-        {
+        else if (A[i] < B[i]) {
             return SMALLER;
         }
     } while (i != 0);
@@ -558,16 +701,10 @@ int bignum_cmp(struct bn* a, struct bn* b)
     return EQUAL;
 }
 
-
-int bignum_is_zero(struct bn* n)
+int BigInt_is_zero(size_t NumWords, BigInt_t* BigInt)
 {
-    require(n, "n is null");
-
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        if (n->array[i])
-        {
+    for (size_t i = 0; i < NumWords; ++i) {
+        if (BigInt[i]) {
             return 0;
         }
     }
@@ -575,163 +712,127 @@ int bignum_is_zero(struct bn* n)
     return 1;
 }
 
-
-void bignum_pow(struct bn* a, struct bn* b, struct bn* c)
+void BigInt_pow(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out)
 {
-    require(a, "a is null");
-    require(b, "b is null");
-    require(c, "c is null");
+    BigInt_zero(NumWords, Out);
 
-    struct bn tmp;
-
-    bignum_init(c);
-
-    if (bignum_cmp(b, c) == EQUAL)
-    {
-        /* Return 1 when exponent is 0 -- n^0 = 1 */
-        bignum_inc(c);
+    if (BigInt_cmp(NumWords, B, Out) == EQUAL) {
+        /* Return 1 when exponent is 0 -- BigInt^0 = 1 */
+        BigInt_inc(NumWords, Out);
     }
-    else
-    {
-        struct bn bcopy;
-        bignum_assign(&bcopy, b);
+    else {
+        BigInt_t* bcopy = alloca(NumWords * BigIntWordSize), * tmp = alloca(NumWords * BigIntWordSize);
+        BigInt_copy(NumWords, bcopy, B);
 
-        /* Copy a -> tmp */
-        bignum_assign(&tmp, a);
+        /* Copy A -> tmp */
+        BigInt_copy(NumWords, tmp, A);
 
-        bignum_dec(&bcopy);
+        BigInt_dec(NumWords, bcopy);
 
         /* Begin summing products: */
-        while (!bignum_is_zero(&bcopy))
-        {
+        while (!BigInt_is_zero(NumWords, bcopy)) {
+            /* Out = tmp * tmp */
+            BigInt_mul(NumWords, tmp, NumWords, A, NumWords, Out);
+            /* Decrement B by one */
+            BigInt_dec(NumWords, bcopy);
 
-            /* c = tmp * tmp */
-            bignum_mul(&tmp, a, c);
-            /* Decrement b by one */
-            bignum_dec(&bcopy);
-
-            bignum_assign(&tmp, c);
+            BigInt_copy(NumWords, tmp, Out);
         }
 
-        /* c = tmp */
-        bignum_assign(c, &tmp);
+        /* Out = tmp */
+        BigInt_copy(NumWords, Out, tmp);
     }
 }
 
-void bignum_isqrt(struct bn* a, struct bn* b)
+void BigInt_isqrt(size_t NumWords, BigInt_t* A, BigInt_t* B)
 {
-    require(a, "a is null");
-    require(b, "b is null");
+    BigInt_t* low = alloca(NumWords * BigIntWordSize);
+    BigInt_t* high = alloca(NumWords * BigIntWordSize);
+    BigInt_t* mid = alloca(NumWords * BigIntWordSize);
+    BigInt_t* tmp = alloca(NumWords * BigIntWordSize);
 
-    struct bn low, high, mid, tmp;
+    BigInt_zero(NumWords, low);
+    BigInt_copy(NumWords, high, A);
+    BigInt_copy(NumWords, mid, high);
+    BigInt_rshift(NumWords, mid, 1);
+    BigInt_inc(NumWords, mid);
 
-    bignum_init(&low);
-    bignum_assign(&high, a);
-    bignum_rshift(&high, &mid, 1);
-    bignum_inc(&mid);
-
-    while (bignum_cmp(&high, &low) > 0)
-    {
-        bignum_mul(&mid, &mid, &tmp);
-        if (bignum_cmp(&tmp, a) > 0)
-        {
-            bignum_assign(&high, &mid);
-            bignum_dec(&high);
+    while (BigInt_cmp(NumWords, high, low) > 0) {
+        BigInt_mul(NumWords, mid, NumWords, mid, NumWords, tmp);
+        if (BigInt_cmp(NumWords, tmp, A) > 0) {
+            BigInt_copy(NumWords, high, mid);
+            BigInt_dec(NumWords, high);
         }
-        else
-        {
-            bignum_assign(&low, &mid);
+        else {
+            BigInt_copy(NumWords, low, mid);
         }
-        bignum_sub(&high, &low, &mid);
-        _rshift_one_bit(&mid);
-        bignum_add(&low, &mid, &mid);
-        bignum_inc(&mid);
+        BigInt_sub(NumWords, high, NumWords, low, NumWords, mid);
+        _rshift_one_bit(NumWords, mid);
+        BigInt_add(NumWords, low, NumWords, mid, NumWords, mid);
+        BigInt_inc(NumWords, mid);
     }
-    bignum_assign(b, &low);
+    BigInt_copy(NumWords, B, low);
 }
 
-
-void bignum_assign(struct bn* dst, struct bn* src)
+void BigInt_copy(size_t NumWords, BigInt_t* Dst, BigInt_t* Src)
 {
-    require(dst, "dst is null");
-    require(src, "src is null");
-
-    int i;
-    for (i = 0; i < BN_ARRAY_SIZE; ++i)
-    {
-        dst->array[i] = src->array[i];
+    for (size_t i = 0; i < NumWords; ++i) {
+        Dst[i] = Src[i];
     }
 }
 
+void BigInt_copy_dif(size_t DstNumWords, BigInt_t* Dst, size_t SrcNumWords, BigInt_t* Src)
+{
+    size_t smallest = (DstNumWords < SrcNumWords) ? DstNumWords : SrcNumWords;
+    size_t i;
+    for (i = 0; i < smallest; ++i) Dst[i] = Src[i];
+    for (; i < DstNumWords; ++i) Dst[i] = 0;
+}
 
 /* Private / Static functions. */
-static void _rshift_word(struct bn* a, int nwords)
+static void _rshift_word(size_t NumWords, BigInt_t* A, int nwords)
 {
-    /* Naive method: */
-    require(a, "a is null");
-    require(nwords >= 0, "no negative shifts");
-
-    int i;
-    if (nwords >= BN_ARRAY_SIZE)
-    {
-        for (i = 0; i < BN_ARRAY_SIZE; ++i)
-        {
-            a->array[i] = 0;
+    size_t i;
+    if (nwords >= NumWords) {
+        for (i = 0; i < NumWords; ++i) {
+            A[i] = 0;
         }
         return;
     }
 
-    for (i = 0; i < BN_ARRAY_SIZE - nwords; ++i)
-    {
-        a->array[i] = a->array[i + nwords];
+    for (i = 0; i < NumWords - nwords; ++i) {
+        A[i] = A[i + nwords];
     }
-    for (; i < BN_ARRAY_SIZE; ++i)
-    {
-        a->array[i] = 0;
+    for (; i < NumWords; ++i) {
+        A[i] = 0;
     }
 }
 
-
-static void _lshift_word(struct bn* a, int nwords)
+static void _lshift_word(size_t NumWords, BigInt_t* A, int nwords)
 {
-    require(a, "a is null");
-    require(nwords >= 0, "no negative shifts");
-
-    int i;
+    int_fast32_t i;
     /* Shift whole words */
-    for (i = (BN_ARRAY_SIZE - 1); i >= nwords; --i)
-    {
-        a->array[i] = a->array[i - nwords];
+    for (i = (NumWords - 1); i >= nwords; --i) {
+        A[i] = A[i - nwords];
     }
     /* Zero pad shifted words. */
-    for (; i >= 0; --i)
-    {
-        a->array[i] = 0;
+    for (; i >= 0; --i) {
+        A[i] = 0;
     }
 }
 
-
-static void _lshift_one_bit(struct bn* a)
+static void _lshift_one_bit(size_t NumWords, BigInt_t* A)
 {
-    require(a, "a is null");
-
-    int i;
-    for (i = (BN_ARRAY_SIZE - 1); i > 0; --i)
-    {
-        a->array[i] = (a->array[i] << 1) | (a->array[i - 1] >> ((8 * WORD_SIZE) - 1));
+    for (size_t i = (NumWords - 1); i > 0; --i) {
+        A[i] = (A[i] << 1) | (A[i - 1] >> ((8 * BigIntWordSize) - 1));
     }
-    a->array[0] <<= 1;
+    A[0] <<= 1;
 }
 
-
-static void _rshift_one_bit(struct bn* a)
+static void _rshift_one_bit(size_t NumWords, BigInt_t* A)
 {
-    require(a, "a is null");
-
-    int i;
-    for (i = 0; i < (BN_ARRAY_SIZE - 1); ++i)
-    {
-        a->array[i] = (a->array[i] >> 1) | (a->array[i + 1] << ((8 * WORD_SIZE) - 1));
+    for (size_t i = 0; i < (NumWords - 1); ++i) {
+        A[i] = (A[i] >> 1) | (A[i + 1] << ((8 * BigIntWordSize) - 1));
     }
-    a->array[BN_ARRAY_SIZE - 1] >>= 1;
+    A[NumWords - 1] >>= 1;
 }

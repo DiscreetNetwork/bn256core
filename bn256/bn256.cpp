@@ -23,7 +23,7 @@ using namespace bn256;
 static inline void random_scalar(struct bn* k) {
 	struct bn tmp;
 	bignum_init(&tmp);
-	generate_randombytes(32, (void*)&tmp.array[0]);
+	generate_randombytes(48, (void*)&tmp.array[0]);
 	bignum_init(k);
 	bignum_mod(&tmp, &order, k);
 }

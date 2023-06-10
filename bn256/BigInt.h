@@ -29,48 +29,29 @@ extern "C" {
 
 #include "types.h"
 
-/* This macro defines the word size in bytes of the array that constitues the big-number data structure. */
-#ifndef WORD_SIZE
-#define WORD_SIZE 4
-#endif
+
+/* Size of 'digits' or 'words' used to represent big ints, you can set this to 1, 2, 4 or 8 */
+#define BigIntWordSize 4
 
 /* Size of big-numbers in bytes (EDIT: we use 64 (i.e. double the width of 256-bit element) as our max size) */
-#define BN_ARRAY_SIZE    (64 / WORD_SIZE)
+#define BN_ARRAY_SIZE    (64 / BigIntWordSize)
 
-
-/* Here comes the compile-time specialization for how large the underlying array size should be. */
-/* The choices are 1, 2 and 4 bytes in size with uint32, uint64 for WORD_SIZE==4, as temporary. */
-#ifndef WORD_SIZE
-#error Must define WORD_SIZE to be 1, 2, 4
-#elif (WORD_SIZE == 1)
-  /* Data type of array in structure */
-#define DTYPE                    uint8_t
-/* bitmask for getting MSB */
-#define DTYPE_MSB                ((DTYPE_TMP)(0x80))
-/* Data-type larger than DTYPE, for holding intermediate results of calculations */
-#define DTYPE_TMP                uint32_t
-/* sprintf format string */
-#define SPRINTF_FORMAT_STR       "%.02x"
-#define SSCANF_FORMAT_STR        "%2hhx"
-/* Max value of integer type */
-#define MAX_VAL                  ((DTYPE_TMP)0xFF)
-#elif (WORD_SIZE == 2)
-#define DTYPE                    uint16_t
-#define DTYPE_TMP                uint32_t
-#define DTYPE_MSB                ((DTYPE_TMP)(0x8000))
-#define SPRINTF_FORMAT_STR       "%.04x"
-#define SSCANF_FORMAT_STR        "%4hx"
-#define MAX_VAL                  ((DTYPE_TMP)0xFFFF)
-#elif (WORD_SIZE == 4)
-#define DTYPE                    uint32_t
-#define DTYPE_TMP                uint64_t
-#define DTYPE_MSB                ((DTYPE_TMP)(0x80000000))
-#define SPRINTF_FORMAT_STR       "%.08x"
-#define SSCANF_FORMAT_STR        "%8x"
-#define MAX_VAL                  ((DTYPE_TMP)0xFFFFFFFF)
-#endif
-#ifndef DTYPE
-#error DTYPE must be defined to uint8_t, uint16_t uint32_t or whatever
+#ifndef BigIntWordSize
+#error Must define BigIntWordSize to be 1, 2, 4
+#elif (BigIntWordSize == 1)
+	/* Data type of array in structure */
+	typedef uint8_t BigInt_t;
+	/* Data-type larger than BigInt_t, for holding intermediate results of calculations */
+	typedef uint32_t BigInt_tmp_t;
+#elif (BigIntWordSize == 2)
+	typedef uint16_t BigInt_t;
+	typedef uint32_t BigInt_tmp_t;
+#elif (BigIntWordSize == 4)
+	typedef uint32_t BigInt_t;
+	typedef uint64_t BigInt_tmp_t;
+#elif (BigIntWordSize == 8)
+	typedef uint64_t BigInt_t;
+	typedef __uint128_t BigInt_tmp_t;
 #endif
 
 
@@ -81,51 +62,55 @@ extern "C" {
 /* Data-holding structure: array of DTYPEs */
 struct bn
 {
-	DTYPE array[BN_ARRAY_SIZE];
+	BigInt_t array[BN_ARRAY_SIZE];
 };
 
-
-
-/* Tokens returned by bignum_cmp() for value comparison */
+/* Tokens returned by BigInt_cmp() for value comparison */
 enum { SMALLER = -1, EQUAL = 0, LARGER = 1 };
 
-
-
-/* Initialization functions: */
+// bignum
+void bignum_init(struct bn* n);
 void bignum_from_gfp(struct bn* n, const gfp_t a);
 void gfp_from_bignum(gfp_t c, struct bn* n);
 int bignum_wordlen(struct bn* n);
 int bignum_bitlen(struct bn* n);
 int bignum_bit(struct bn* n, int i);
-void bignum_init(struct bn* n);
-void bignum_from_int(struct bn* n, DTYPE_TMP i);
-int  bignum_to_int(struct bn* n);
-void bignum_from_string(struct bn* n, char* str, int nbytes);
-void bignum_to_string(struct bn* n, char* str, int maxsize);
+void bignum_mod(const struct bn* a, const struct bn* b, struct bn* c);
+
+/* In/out functions */
+void BigInt_zero(size_t NumWords, BigInt_t* BigInt);
+void BigInt_from_int(size_t NumWords, BigInt_t* BigInt, BigInt_tmp_t Integer);
+int  BigInt_to_int(size_t NumWords, BigInt_t* BigInt);
+void BigInt_from_string(size_t NumWords, BigInt_t* BigInt, char* Str); /* From decimal string */
+void BigInt_from_hex_string(size_t NumWords, BigInt_t* BigInt, char* Str); /* From hex string */
+void BigInt_to_hex_string(size_t NumWords, BigInt_t* BigInt, char* Str); /* To hex string */
+void BigInt_copy(size_t NumWords, BigInt_t* dst, BigInt_t* src);
+void BigInt_copy_dif(size_t DstNumWords, BigInt_t* Dst, size_t SrcNumWords, BigInt_t* Src); /* Copy different sized ones */
 
 /* Basic arithmetic operations: */
-void bignum_add(struct bn* a, struct bn* b, struct bn* c); /* c = a + b */
-void bignum_sub(struct bn* a, struct bn* b, struct bn* c); /* c = a - b */
-void bignum_mul(struct bn* a, struct bn* b, struct bn* c); /* c = a * b */
-void bignum_div(struct bn* a, struct bn* b, struct bn* c); /* c = a / b */
-void bignum_mod(const struct bn* a, const struct bn* b, struct bn* c); /* c = a % b */
-void bignum_divmod(const struct bn* a, const struct bn* b, struct bn* c, struct bn* d); /* c = a/b, d = a%b */
+void BigInt_add(size_t ANumWords, BigInt_t* A, size_t BNumWords, BigInt_t* B, size_t OutNumWords, BigInt_t* Out); /* Out = A + B */
+void BigInt_sub(size_t ANumWords, BigInt_t* A, size_t BNumWords, BigInt_t* B, size_t OutNumWords, BigInt_t* Out); /* Out = A - B */
+void BigInt_mul(size_t XWords, BigInt_t* X, size_t YWords, BigInt_t* Y, size_t OutWords, BigInt_t* Out); /* Karatsuba multiplication */
+void BigInt_mul_basic(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Out = A * B, old method, faster for small numbers */
+void BigInt_div(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Out = A / B */
+void BigInt_mod(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Out = A % B */
+void BigInt_divmod(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* C, BigInt_t* D); /* C = A/B, D = A%B */
 
 /* Bitwise operations: */
-void bignum_and(struct bn* a, struct bn* b, struct bn* c); /* c = a & b */
-void bignum_or(struct bn* a, struct bn* b, struct bn* c);  /* c = a | b */
-void bignum_xor(struct bn* a, struct bn* b, struct bn* c); /* c = a ^ b */
-void bignum_lshift(struct bn* a, struct bn* b, int nbits); /* b = a << nbits */
-void bignum_rshift(struct bn* a, struct bn* b, int nbits); /* b = a >> nbits */
+void BigInt_and(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Out = A & B */
+void BigInt_or(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out);  /* Out = A | B */
+void BigInt_xor(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Out = A ^ B */
+void BigInt_lshift(size_t NumWords, BigInt_t* B, int nbits); /* B = A << nbits */
+void BigInt_rshift(size_t NumWords, BigInt_t* B, int nbits); /* B = A >> nbits */
 
 /* Special operators and comparison */
-int  bignum_cmp(struct bn* a, struct bn* b);               /* Compare: returns LARGER, EQUAL or SMALLER */
-int  bignum_is_zero(struct bn* n);                         /* For comparison with zero */
-void bignum_inc(struct bn* n);                             /* Increment: add one to n */
-void bignum_dec(struct bn* n);                             /* Decrement: subtract one from n */
-void bignum_pow(struct bn* a, struct bn* b, struct bn* c); /* Calculate a^b -- e.g. 2^10 => 1024 */
-void bignum_isqrt(struct bn* a, struct bn* b);             /* Integer square root -- e.g. isqrt(5) => 2*/
-void bignum_assign(struct bn* dst, struct bn* src);        /* Copy src into dst -- dst := src */
+int  BigInt_cmp(size_t NumWords, BigInt_t* A, BigInt_t* B); /* Compare: returns LARGER, EQUAL or SMALLER */
+int  BigInt_is_zero(size_t NumWords, BigInt_t* BigInt); /* For comparison with zero */
+void BigInt_inc(size_t NumWords, BigInt_t* BigInt); /* Increment: add one to BigInt */
+void BigInt_dec(size_t NumWords, BigInt_t* BigInt); /* Decrement: subtract one from BigInt */
+void BigInt_pow(size_t NumWords, BigInt_t* A, BigInt_t* B, BigInt_t* Out); /* Calculate A^B -- e.g. 2^10 => 1024 */
+void BigInt_isqrt(size_t NumWords, BigInt_t* A, BigInt_t* B); /* Integer square root -- e.g. isqrt(5) => 2*/
+size_t BigInt_truncate(size_t BigIntWords, BigInt_t* BigInt); /* How many digits are actually needed */
 
 #ifdef __cplusplus
 }

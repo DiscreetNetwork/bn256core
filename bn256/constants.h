@@ -33,9 +33,9 @@ extern const gfp_t curveg1b;
 extern const twistpoint_t g2gen;
 extern const gfp2_t curveg2b;
 
-const struct bn u;
-const struct bn p;
-const struct bn order;
+extern const struct bn u;
+extern const struct bn p;
+extern const struct bn order;
 
 #ifdef __cplusplus
 }

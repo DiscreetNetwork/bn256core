@@ -4,6 +4,7 @@
 #include "gfp_generic.h"
 #include "constants.h"
 
+#if !defined(NONGENERIC)
 void gfp_carry(gfp_t a, const uint64_t head) {
 	gfp_t b;
 	uint64_t carry = 0;
@@ -240,3 +241,4 @@ void gfp_mul(gfp_t c, const gfp_t a, const gfp_t b) {
 
 	gfp_carry(c, carry);
 }
+#endif // NONGENERIC
