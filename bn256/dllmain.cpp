@@ -1,11 +1,12 @@
+extern "C" {
+#include "gfp_generic.h"
+#include "export.h"
+}
+
 #ifdef _MSC_VER
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
-extern "C" {
-#include "gfp_generic.h"
-}
 
 BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     switch (reason)
@@ -33,6 +34,13 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
-#else
+#elif defined(__GNUC__)
+
+#pragma init InitLib
+void InitLib();
+
+void InitLib() {
+    hasbmi2();
+}
 
 #endif

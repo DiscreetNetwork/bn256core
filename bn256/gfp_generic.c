@@ -4,8 +4,6 @@
 #include "gfp_generic.h"
 #include "constants.h"
 
-int hasBMI2 = -1;
-
 int hasbmi2() {
 	int cpuInfo[4] = { 0 };
 	__cpuidex(cpuInfo, 7, 0);
@@ -15,7 +13,6 @@ int hasbmi2() {
 
 	return hasBMI2;
 }
-
 
 #if !defined(NONGENERIC)
 void gfp_carry(gfp_t a, const uint64_t head) {

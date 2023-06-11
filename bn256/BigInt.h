@@ -26,6 +26,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <assert.h>
+#include <stddef.h>
 
 #include "types.h"
 

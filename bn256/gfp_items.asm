@@ -5,6 +5,10 @@ bits 64
 ; rax, rcx, rdx, r8, r9, r10, r11 are volatile. we must store r12, r13, and r14 before use. We also shadow-store parameters, so the first 32 bytes above the fp are reserved.
 ;
 
+%ifdef LINUX
+DEFAULT REL
+%endif
+
 %macro storeBlock 5
 	mov qword [%5 +  0], %1
 	mov qword [%5 +  8], %2
@@ -100,7 +104,7 @@ bits 64
 	adc  rcx, rbx
 %endmacro
 
-%rmacro mulregl 6
+%macro mulregl 6
     mov rax, %1
     mul qword [%5 + 0]
     mov r8, rax
@@ -350,12 +354,10 @@ gfpsub:
 ; hasBMI2: 32-bit integer
 ; This is a flag that gets set on dll entry indicating if
 ; the processor supports bmi2 instructions (we use mulx if so)
-extern hasBMI2
-
 global gfpfastmul ; c = rcx, a = rdx, b = r8
 gfpfastmul:
 	xor rax, rax
-	mov eax, [rel hasBMI2]
+	mov eax, dword [rel hasBMI2]
 	cmp eax, 1
 	jne mulregular
 
@@ -564,3 +566,6 @@ p2:
 
 np:
 	dq 0x2387f9007f17daa9, 0x734b3343ab8513c8, 0x2524282f48054c12, 0x38997ae661c3ef3c
+
+hasBMI2:
+	dd -1
