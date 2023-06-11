@@ -5,10 +5,6 @@ bits 64
 ; rax, rcx, rdx, r8, r9, r10, r11 are volatile. we must store r12, r13, and r14 before use. We also shadow-store parameters, so the first 32 bytes above the fp are reserved.
 ;
 
-%ifdef LINUX
-DEFAULT REL
-%endif
-
 %macro storeBlock 5
 	mov qword [%5 +  0], %1
 	mov qword [%5 +  8], %2
@@ -567,5 +563,6 @@ p2:
 np:
 	dq 0x2387f9007f17daa9, 0x734b3343ab8513c8, 0x2524282f48054c12, 0x38997ae661c3ef3c
 
+global hasBMI2
 hasBMI2:
 	dd -1
