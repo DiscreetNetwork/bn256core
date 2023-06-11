@@ -7,6 +7,9 @@ extern "C" {
 
 #include "types.h"
 
+int hasbmi2();
+extern int hasBMI2;
+
 #define NONGENERIC
 #if defined(NONGENERIC)
 
@@ -15,9 +18,6 @@ void gfpneg(gfp_t c, const gfp_t a);
 void gfpadd(gfp_t c, const gfp_t a, const gfp_t b);
 void gfpsub(gfp_t c, const gfp_t a, const gfp_t b);
 void gfpfastmul(gfp_t c, const gfp_t a, const gfp_t b);
-
-int hasbmi2();
-extern int hasBMI2;
 
 #define gfp_neg gfpneg
 #define gfp_add gfpadd
