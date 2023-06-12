@@ -569,6 +569,6 @@ p2:
 np:
 	dq 0x2387f9007f17daa9, 0x734b3343ab8513c8, 0x2524282f48054c12, 0x38997ae661c3ef3c
 
-global hasBMI2:data 8
+global hasBMI2
 hasBMI2:
 	dq 0
