@@ -31,7 +31,7 @@ GT           10000      51500ms        5.1500ms
 Pair         10000      69951ms        6.9951ms
 ```
 
-### Windows benchmarks
+### Linux benchmarks
 ```
 Fastmul (assembly speedup; BMI2)
 Operation    Num ops    Total Time     Time per op
