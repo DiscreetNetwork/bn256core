@@ -2,12 +2,19 @@
 Basic library providing bare-bones, unoptimized operations under pairing-friendly curve bn256. Code mainly adapted from https://github.com/cloudflare/bn256. Uses https://github.com/kokke/tiny-bignum-c for bigints.
 
 # Disclosure
-The repository in its current state is experimental and not meant for production use.
+The repository in its current state is experimental and not meant for production use. 32-bit builds of this repository have not been tested.
 
-## Benchmarks
+# Build Instructions
+## Linux
+Install NASM. Update GCC/G++ to the latest version. Run the makefile; shared library will be in the `linux` subdirectory.
+
+## Windows
+Install Visual Studio. Install NASM. Clone repository. Update build configuration for `gfp_items.asm`, i.e. the command `path/to/your/nasm.exe -f win64 gfp_items.asm`. This can be done by right-clicking the file in the solution explorer, clicking "properties", going into "Custom Build Tool" and updating the command as specified in the "Command Line" field. Build solution on Release/x64 configuration.
+
+# Benchmarks
 All benchmarks were performed with `Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz`. Benchmarks were performed with randomized data for each operation, calculated prior to the benchmark. 
 
-### Windows benchmarks
+## Windows benchmarks
 ```
 Fastmul (assembly speedup; BMI2)
 Operation    Num ops    Total Time     Time per op
@@ -31,7 +38,7 @@ GT           10000      51500ms        5.1500ms
 Pair         10000      69951ms        6.9951ms
 ```
 
-### Linux benchmarks
+## Linux benchmarks
 ```
 Fastmul (assembly speedup; BMI2)
 Operation    Num ops    Total Time     Time per op
