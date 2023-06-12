@@ -5,6 +5,9 @@ bits 64
 ; rax, rcx, rdx, r8, r9, r10, r11 are volatile. we must store r12, r13, and r14 before use. We also shadow-store parameters, so the first 32 bytes above the fp are reserved.
 ;
 
+; HOWEVER: linux standard uses rdi, rsi, rdx, rcx, r8, and r9. (SYSTEM V x64)
+; We expect args to be in here.
+
 ;default rel
 
 %macro storeBlock 5
@@ -207,28 +210,30 @@ bits 64
 global __cpuidex
 ; We provide our own CPUID code. we only need the one function anyway.
 __cpuidex:
-	; rcx contains a pointer to the return value
-	; rdx contains what rax needs to
-	; r8 contains what rcx needs to
-	mov qword [rsp - 8], rcx
-	mov rax, rdx
-	mov rcx, r8
+	; rcx contains a pointer to the return value (rdi on linux)
+	; rdx contains what rax needs to (rsi on linux)
+	; r8 contains what rcx needs to (rdx on linux)
+	mov qword [rsp - 8], rdi
+	xor rax, rax
+	xor rcx, rcx	
+	mov eax, esi
+	mov ecx, edx
 	cpuid
-	mov r8, qword [rsp - 8]
-	mov dword [r8 +  0], eax
-	mov dword [r8 +  4], ebx
-	mov dword [r8 +  8], ecx
-	mov dword [r8 + 16], edx
+	mov rdx, qword [rsp - 8]
+	mov dword [rdx +  0], eax
+	mov dword [rdx +  4], ebx
+	mov dword [rdx +  8], ecx
+	mov dword [rdx + 16], edx
 	ret
 
 
 global gfpneg
 gfpneg:
 	push r12
-	push r13
-	push r14
-	push rsi
-	push rdi
+	;push r13
+	;push r14
+	;push rsi on linux these don't need to be saved by us
+	;push rdi
 	push rbx
 
 	mov r8,  qword [rel p2 +  0]
@@ -236,8 +241,8 @@ gfpneg:
 	mov r10, qword [rel p2 + 16]
 	mov r11, qword [rel p2 + 24]
 
-	mov rdi, rcx ; rcx stores return value 'c'
-	mov rsi, rdx ; rdx stores parameter value 'a'
+	;mov rdi, rcx ; rcx stores return value 'c' (rdi on linux)
+	;mov rsi, rdx ; rdx stores parameter value 'a'(rsi on linux)
 	
 	sub r8,  qword [rsi +  0] ; ;r8 := r8 - [di] = pi - ai - carry
 	sbb r9,  qword [rsi +  8]
@@ -246,73 +251,75 @@ gfpneg:
 
 	mov rax, 0
 	
+	; we no longer need the rsi pointer, and rdx is free for us to use
+	; so we can remove r13 and r14 as saved and reuse rdx, rsi for gfpCarry
 	;carry
-	gfpCarry r8, r9, r10, r11, rax,  r12, r13, r14, rcx, rbx
+	gfpCarry r8, r9, r10, r11, rax,  r12, rbx, rcx, rdx, rsi
 
 	;store result (r8:r11)
 	storeBlock r8, r9, r10, r11,  rdi
 	
 	pop rbx
-	pop rdi
-	pop rsi
-	pop r14
-	pop r13
+	;pop rdi
+	;pop rsi
+	;pop r14
+	;pop r13
 	pop r12
 	ret
 
-global gfpadd ; rcx = c, rdx = a, r8 = b
+global gfpadd ; rdi = c, rsi = a, rdx = b
 gfpadd:
 	push r12
-	push r13
-	push r14
-	push rsi
-	push rdi
+	;push r13
+	;push r14
+	;push rsi
+	;push rdi
 	push rbx
 
-	mov [rsp - 8], rcx
-	mov rdi, rdx
-	mov rsi, r8
+	;mov [rsp - 8], rcx
+	;mov rdi, rdx
+	;mov rsi, r8
 
 	; load rdi (a) into r8:r11
-	loadBlock rdi, r8, r9, r10, r11
+	loadBlock rsi, r8, r9, r10, r11
 
 	; perform add
 	mov r12, 0
-	add r8,  [rsi +  0]
-	adc r9,  [rsi +  8]
-	adc r10, [rsi + 16]
-	adc r11, [rsi + 24]
+	add r8,  [rdx +  0]
+	adc r9,  [rdx +  8]
+	adc r10, [rdx + 16]
+	adc r11, [rdx + 24]
 	adc r12, 0
 
 	; carry (R8,R9,R10,R11,R12, R13,R14,DX,AX,BX)
-	gfpCarry r8, r9, r10, r11, r12,  r13, r14, rcx, rax, rbx
+	gfpCarry r8, r9, r10, r11, r12, rdx, rax, rbx, rcx, rsi
 
 	; store result (r8:r11) in c
-	mov rdi, [rsp - 8]
+	;mov rdi, [rsp - 8]
 	storeBlock r8, r9, r10, r11, rdi
 
 	pop rbx
-	pop rdi
-	pop rsi
-	pop r14
-	pop r13
+	;pop rdi
+	;pop rsi
+	;pop r14
+	;pop r13
 	pop r12
 	ret
 
-global gfpsub ; c = rcx, a = rdx, b = r8
+global gfpsub ; c = rdi, a = rsi, b = rdx
 gfpsub:
 	push r12
 	push r13
 	push r14
-	push rdi
-	push rsi
+	;push rdi
+	;push rsi
 
-	mov [rsp - 8], rcx
-	mov rdi, rdx
-	mov rsi, r8
+	;mov [rsp - 8], rcx
+	;mov rdi, rdx
+	;mov rsi, r8
 
 	; load di (a) into r8:r11
-	loadBlock rdi, r8, r9, r10, r11
+	loadBlock rsi, r8, r9, r10, r11
 
 	mov r12, [rel p2 +  0]
 	mov r13, [rel p2 +  8]
@@ -320,10 +327,10 @@ gfpsub:
 	mov rcx, [rel p2 + 24]
 	mov rax, 0
 
-	sub r8,  [rsi +  0]
-	sbb r9,  [rsi +  8]
-	sbb r10, [rsi + 16]
-	sbb r11, [rsi + 24]
+	sub r8,  [rdx +  0]
+	sbb r9,  [rdx +  8]
+	sbb r10, [rdx + 16]
+	sbb r11, [rdx + 24]
 
 	cmovae r12, rax
 	cmovae r13, rax
@@ -335,11 +342,11 @@ gfpsub:
 	adc r10, r14
 	adc r11, rcx
 
-	mov rdi, [rsp - 8]
+	;mov rdi, [rsp - 8]
 	storeBlock r8, r9, r10, r11, rdi
 
-	pop rsi
-	pop rdi
+	;pop rsi
+	;pop rdi
 	pop r14
 	pop r13
 	pop r12
@@ -354,7 +361,7 @@ gfpsub:
 ; the processor supports bmi2 instructions (we use mulx if so)
 ;extern hasBMI2
 
-global gfpfastmul ; c = rcx, a = rdx, b = r8
+global gfpfastmul ; c = rdi, a = rsi, b = rdx
 gfpfastmul:
 	xor rax, rax
 	mov rax, [rel hasBMI2]
@@ -362,20 +369,20 @@ gfpfastmul:
 	jne mulregular
 
 mulbmi2:			; rsp-(8:32) = T[0:4], rsp-(40:64) = T[4:8] 
-	push rdi
-	push rsi
+	;push rdi
+	;push rsi
 	push r12
 	push r13
 	push r14
 	push rbx
 
-	mov qword [rsp - 104], rcx ; store c
+	mov qword [rsp - 104], rdi ; store c
 
+	; we want rdi to be b
 	mov rdi, rdx
-	mov rsi, r8
 
 	;mulbmi2
-	mulBMI2 [rdi +  0], [rdi +  8], [rdi + 16], [rdi + 24], rsi
+	mulBMI2 [rsi +  0], [rsi +  8], [rsi + 16], [rsi + 24], rdi
 
 	;store
 	storeBlock r8, r9, r10, r11, rsp - 32
@@ -448,25 +455,25 @@ mulbmi2:			; rsp-(8:32) = T[0:4], rsp-(40:64) = T[4:8]
 	pop r14
 	pop r13
 	pop r12
-	pop rsi
-	pop rdi
+	;pop rsi
+	;pop rdi
 	ret
 
-mulregular: ; non BMI2 mult, rcx = c, rdx = a, r8 = b
-	push rdi
-	push rsi
+mulregular: ; non BMI2 mult, rdi = c, rsi = a, rdx = b
+	;push rdi
+	;push rsi
 	push r12
 	push r13
 	push r14
 	push rbx
 
-	mov qword [rsp - 168], rcx
+	mov qword [rsp - 168], rdi
+	;mov rdi, rdx
 	mov rdi, rdx
-	mov rsi, r8
 
 	; multiply
 	; args: a0:3 = rdi (off), rb = rsi, stack = rsp
-	mulregl [rdi +  0], [rdi +  8], [rdi + 16], [rdi + 24], rsi, rsp - 64
+	mulregl [rsi +  0], [rsi +  8], [rsi + 16], [rsi + 24], rdi, rsp - 64
 
 	; reduce
 	mov rax, [rel np +  0]
@@ -553,8 +560,8 @@ mulregular: ; non BMI2 mult, rcx = c, rdx = a, r8 = b
 	pop r14
 	pop r13
 	pop r12
-	pop rsi
-	pop rdi
+	;pop rsi
+	;pop rdi
 	ret
 
 

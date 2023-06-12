@@ -28,9 +28,14 @@ static inline void random_scalar(struct bn* k) {
 	bignum_mod(&tmp, &order, k);
 }
 
-EXPORT int CheckBMI2() {
+EXPORT uint64_t CheckBMI2() {
+#ifdef __GNUC__
+	return hasbmi2();
+#else
 	return hasBMI2;
+#endif
 }
+
 
 EXPORT void TestIfWorks(int* a, int b) {
 	*a = 2 * b;

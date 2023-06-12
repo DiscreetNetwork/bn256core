@@ -36,11 +36,11 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
 
 #elif defined(__GNUC__)
 
-#pragma init InitLib
-void InitLib();
+//#pragma init InitLib
+//void InitLib();
 
-void InitLib() {
-    hasbmi2();
-}
+//void InitLib() {
+//    hasbmi2();
+//}
 
 #endif

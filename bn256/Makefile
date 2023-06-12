@@ -13,8 +13,8 @@ all: dirs core clean
 build/verify.o: $(SOURCE)/verify.c $(SOURCE)/verify.h
 	$(CC) $(CFLAGS) -I$(INC) $(SOURCE)/verify.c -o $(BUILD)/verify.o
 
-build/gfp_items.o: $(SOURCE)/gfp_items.asm
-	$(AS) $(ASFLAGS) $(SOURCE)/gfp_items.asm -o $(BUILD)/gfp_items.o
+build/gfp_items.o: $(SOURCE)/gfp_items.s
+	$(AS) $(ASFLAGS) $(SOURCE)/gfp_items.s -o $(BUILD)/gfp_items.o
 
 build/sha256.o: $(SOURCE)/sha256.c $(SOURCE)/sha256.h $(SOURCE)/util.h
 	$(CC) $(CFLAGS) -I$(INC) $(SOURCE)/sha256.c -o $(BUILD)/sha256.o

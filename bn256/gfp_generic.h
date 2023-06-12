@@ -1,16 +1,26 @@
 #if !defined(GFP_GENERIC_H)
 #define GFP_GENERIC_H
 
+// nongeneric check
+#if defined(__GNUC__)
+#if defined(__x86_64__)
+#define NONGENERIC
+#endif
+#elif defined(_MSC_VER)
+#if defined(_WIN64)
+#define NONGENERIC
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 #include "types.h"
 
-int hasbmi2();
-extern int hasBMI2;
+uint64_t hasbmi2();
+extern uint64_t hasBMI2;
 
-#define NONGENERIC
 #if defined(NONGENERIC)
 
 void __cpuidex(int res[4], int arg1, int arg2);

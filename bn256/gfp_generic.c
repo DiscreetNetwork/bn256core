@@ -4,7 +4,8 @@
 #include "gfp_generic.h"
 #include "constants.h"
 
-int hasbmi2() {
+//uint64_t hasBMI2 = 0;
+uint64_t hasbmi2() {
 	int cpuInfo[4] = { 0 };
 	__cpuidex(cpuInfo, 7, 0);
 	if (cpuInfo[1] & 0x100) {

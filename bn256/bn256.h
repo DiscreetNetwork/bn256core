@@ -59,7 +59,7 @@ namespace bn256 {
 extern "C" {
 #endif
 
-EXPORT int CheckBMI2();
+EXPORT uint64_t CheckBMI2();
 EXPORT void TestIfWorks(int* a, int b);
 EXPORT int ScalarBitlen(bn256::Scalar& k);
 EXPORT int ScalarBit(bn256::Scalar& k, int i);
