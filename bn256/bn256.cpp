@@ -338,6 +338,8 @@ EXPORT int UnmarshalG1(G1& a, G1enc& e) {
 			ThrowException("bn256: point is malformed or invalid");
 			return 1;
 		}
+
+		return 0;
 	}
 }
 
