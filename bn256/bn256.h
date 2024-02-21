@@ -120,7 +120,7 @@ EXPORT void NegG1(bn256::G1& na, bn256::G1& a);
 EXPORT bn256::G1 NegG1_1(bn256::G1& a);
 EXPORT void MarshalG1(bn256::G1enc& res, bn256::G1& a);
 EXPORT bn256::G1enc MarshalG1_1(bn256::G1& a);
-EXPORT void UnmarshalG1(bn256::G1& a, bn256::G1enc& e);
+EXPORT int UnmarshalG1(bn256::G1& a, bn256::G1enc& e);
 EXPORT bn256::G1 UnmarshalG1_1(bn256::G1enc& e);
 
 EXPORT void RandomG2(bn256::G2& g2, bn256::Scalar& k);
@@ -135,7 +135,7 @@ EXPORT void NegG2(bn256::G2& na, bn256::G2& a);
 EXPORT bn256::G2 NegG2_1(bn256::G2& a);
 EXPORT void MarshalG2(bn256::G2enc& res, bn256::G2& a);
 EXPORT bn256::G2enc MarshalG2_1(bn256::G2& a);
-EXPORT void UnmarshalG2(bn256::G2& a, bn256::G2enc& e);
+EXPORT int UnmarshalG2(bn256::G2& a, bn256::G2enc& e);
 EXPORT bn256::G2 UnmarshalG2_1(bn256::G2enc& e);
 
 EXPORT void RandomGT(bn256::GT& gt, bn256::Scalar& k);
@@ -160,6 +160,8 @@ EXPORT bn256::GT Miller_1(bn256::G1& p, bn256::G2& q);
 EXPORT void FinalizeGT(bn256::GT& gt);
 
 EXPORT void HashG1(bn256::G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len);
+
+EXPORT int TestThrowExc();
 
 #ifdef __cplusplus
 }

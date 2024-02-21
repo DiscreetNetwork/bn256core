@@ -317,7 +317,7 @@ EXPORT G1enc MarshalG1_1(G1& a) {
 	return res;
 }
 
-EXPORT void UnmarshalG1(G1& a, G1enc& e) {
+EXPORT int UnmarshalG1(G1& a, G1enc& e) {
 	curvepoint_zero(&a.p);
 
 	gfp_unmarshal(a.p.x, &e.bytes[0]);
@@ -327,6 +327,7 @@ EXPORT void UnmarshalG1(G1& a, G1enc& e) {
 
 	if (gfp_iszero(a.p.x) && gfp_iszero(a.p.y)) {
 		curvepoint_set_infinity(&a.p);
+		return 0;
 	}
 	else {
 		new_gfp(a.p.z, 1);
@@ -335,6 +336,7 @@ EXPORT void UnmarshalG1(G1& a, G1enc& e) {
 		if (!curvepoint_is_on_curve(&a.p)) {
 			curvepoint_zero(&a.p);
 			ThrowException("bn256: point is malformed or invalid");
+			return 1;
 		}
 	}
 }
@@ -438,15 +440,16 @@ EXPORT G2enc MarshalG2_1(G2& a) {
 	return res;
 }
 
-EXPORT void UnmarshalG2(G2& a, G2enc& e) {
+EXPORT int UnmarshalG2(G2& a, G2enc& e) {
 	if (e.bytes[0] == 0) {
 		twistpoint_set_infinity(&a.p);
-		return;
+		return 0;
 	}
 
 	if (e.bytes[0] != 1) {
 		twistpoint_zero(&a.p);
 		ThrowException("bn256: malformed or invalid encoded twistpoint (G2)");
+		return 1;
 	}
 
 	gfp_unmarshal(a.p.x.x, &e.bytes[1]);
@@ -468,8 +471,11 @@ EXPORT void UnmarshalG2(G2& a, G2enc& e) {
 		if (!twistpoint_is_on_curve(&a.p)) {
 			twistpoint_zero(&a.p);
 			ThrowException("bn256: malformed or invalid point");
+			return 1;
 		}
 	}
+
+	return 0;
 }
 
 EXPORT G2 UnmarshalG2_1(G2enc& e) {
@@ -654,4 +660,9 @@ EXPORT void FinalizeGT(GT& gt) {
 
 EXPORT void HashG1(G1& res, const unsigned char* msg, unsigned long long msg_len, const unsigned char* dst, unsigned long long dst_len) {
 	hash_g1(&res.p, msg, msg_len, dst, dst_len);
+}
+
+EXPORT int TestThrowExc() {
+	ThrowException("testing!");
+	return 1;
 }

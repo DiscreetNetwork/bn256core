@@ -21,7 +21,8 @@ void ThrowException(const char* s_Messg)
 #if defined(_MSC_VER)
     throw InternalException(s_Messg);
 #else
-    throw std::exception();
+    // Unmanaged exceptions cannot be handled by c# well: https://stackoverflow.com/questions/65693051/how-do-i-catch-a-custom-exception-generated-in-a-c-dll-on-c
+    return;
 #endif
 }
 
